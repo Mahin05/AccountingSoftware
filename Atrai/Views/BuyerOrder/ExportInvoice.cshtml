@@ -1,0 +1,1778 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = "Export Invoice";
+    Layout = "~/Views/Shared/_adminLayout.cshtml";
+    var Id = ViewBag.Id as string;
+    var actiontype = ViewBag.ActionType as string;
+}
+<link href="~/css/accountHeadListGearDropdown.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+
+<style>
+    .tabulator {
+        border: none;
+    }
+
+    .tabulator-col .tabulator-col-title {
+        text-align: center;
+    }
+
+    .tabulator-tableholder {
+        background-color: white;
+    }
+
+    .tabulator[tabulator-layout=fitDataTable] {
+        display: inherit;
+    }
+
+    .tabulator .tabulator-header .tabulator-col, .tabulator .tabulator-header {
+        background-color: white;
+        border-right: 1px solid #dee2e6;
+    }
+
+    .tabulator-row .tabulator-cell.tabulator-frozen.tabulator-frozen-left {
+        border-right: 2px solid #aaaaaa38;
+    }
+
+    .tabulator-row .tabulator-cell {
+        border-right: 1px solid #aaaaaa38;
+        border-left: 1px solid #aaaaaa38;
+    }
+
+    .tabulator-cell {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .tabulator .tabulator-row .active-cell {
+        overflow: visible;
+    }
+
+    .tabulator-row:nth-child(even) {
+        background-color: white;
+    }
+
+    .tabulator-row {
+        border: none;
+    }
+
+    .form-control {
+        border: 1px solid #adb5bd !important;
+    }
+
+    #example-table {
+        height: auto !important;
+        border-bottom: 3px solid #ccc;
+        margin-bottom: 10px
+    }
+
+    #previousInvoice {
+        height: auto !important;
+        border-bottom: 3px solid #ccc;
+        margin-bottom: 10px
+    }
+
+    .bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #393a3d;
+        color: #fff;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        margin-left: 39px;
+    }
+
+    #modal-content2 {
+        background-color: #fefefe;
+        margin: 10px auto; 
+        padding: 20px;
+        border: 3px solid #888;
+        width: 80%;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.5);
+    }
+</style>
+
+<div>
+    <div style="background: #F4F4F4; padding: 20px;">
+        <h3 style="border-bottom: 1px solid gray">Export Invoice</h3>
+        <input type="hidden" id="Id" value="0" />
+        <div class="row">
+            <div class="col-md-2 col-2">
+                <label>Master LC/Contact No</label>
+                <select id="MasterLCId" class="form-control" >
+                    <option value="">Select Master LC</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Buyer Group</label>
+                <select id="BuyerGroupId" class="form-control">
+                    <option value="">Select Buyer Group</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Destination</label>
+                <select id="DestinationId" class="form-control">
+                    <option value="">Select from list</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Buyer</label>
+                <select id="BuyerId" class="form-control">
+                    <option value="">Select buyer</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>1st Notify Party</label>
+                <select id="FirstNotifyPartyId" class="form-control">
+                    <option value="">Select from list</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>2nd Notify Party</label>
+                <select id="SecondNotifyPartyId" class="form-control">
+                    <option value="">Select from list</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-2 col-2">
+                <label>3rd Notify Party</label>
+                <select id="ThirdNotifyPartyId" class="form-control">
+                    <option value="">Select from list</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Exporter</label>
+                <select id="CommercialCompanyId" class="form-control">
+                    <option value="">Select..</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Manufacture</label>
+                <select id="ManufactureId" class="form-control">
+                    <option value="">Select..</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>ShipMode</label>
+                <select id="ShipModeId" class="form-control">
+                    <option value="">Select Mode</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>InvoiceRefNo</label>
+                <input type="text" id="InvoiceNo" class="form-control ps-1" style="padding:1px;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Date</label>
+                <input id="InvoiceDate" class="form-control ps-1" style="padding:1px;">
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-2 col-2">
+                <label>Cond. of Sales</label>
+                <select id="TradeTermId" class="form-control">
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Port of Loading</label>
+                <select id="PortOfLoadingId" class="form-control">
+                    <option value="">Select from list</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Port of Discharge</label>
+                <select id="PortOfDischargeId" class="form-control">
+                    <option value="">Select from list</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Forwarder</label>
+                <select id="SupplierId" class="form-control">
+                    <option value="">Select from list</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Exfactory Date</label>
+                <input id="ExfactoryDate" class="form-control" style="padding:1px;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Onboard Date</label>
+                <input id="OnboardDate" class="form-control" style="padding:1px;">
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-2 col-2">
+                <label>Exp No</label>
+                <input type="text" id="ExpNo" class="form-control ps-1" style="padding:1px; text-align: center;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>ExpDate</label>
+                <input id="ExpDate" class="form-control" style="padding:1px;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Total LC Qty</label>
+                <input type="text" id="TotalLCQty" class="form-control ps-1" style="padding:1px; text-align: center;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Vessel Name</label>
+                <input type="text" id="VesselName" class="form-control ps-1" style="padding:1px;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Voyage No</label>
+                <input type="text" id="VoyageNo" class="form-control ps-1" style="padding:1px; text-align: center;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>BL No</label>
+                <input type="text" id="BLNo" class="form-control ps-1" style="padding:1px; text-align: center;">
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-1 col-1">
+                <label>BLDate</label>
+                <input id="BLDate" class="form-control" style="padding:1px;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Shipping Bill No</label>
+                <input type="text" id="ShippingBillNo" class="form-control ps-1" style="padding:1px;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Shipping Bill Date</label>
+                <input id="ShippingBillDate" class="form-control" style="padding:1px;">
+            </div>
+            <div class="col-md-1 col-1">
+                <label>Booking No</label>
+                <input type="text" id="BookingNo" class="form-control ps-1" style="padding:1px; text-align: center;">
+            </div>
+            <div class="col-md-1 col-1">
+                <label>Booking Date</label>
+                <input id="BookingDate" class="form-control" style="padding:1px;">
+            </div>
+            <div class="col-md-1 col-1">
+                <label>Total Shipped</label>
+                <input type="text" id="TotalShipped" class="form-control ps-1" style="padding:1px; text-align: center;" readonly>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Number of Carton</label>
+                <input type="text" id="TotalCartonQty" class="form-control ps-1" style="padding:1px; text-align: center;" readonly>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Balance Ship</label>
+                <input type="text" id="BalanceShip" class="form-control ps-1" style="padding:1px; text-align: center;" value="0.0">
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-1 col-1">
+                <label>Net Weight</label>
+                <input type="text" id="NetWeight" class="form-control ps-1" style="padding:1px; text-align: center;" value="0.0" readonly>
+            </div>
+            <div class="col-md-1 col-1">
+                <label>Gross Weight</label>
+                <input type="text" id="GrossWeight" class="form-control ps-1" style="padding:1px; text-align: center;" value="0.0" readonly>
+            </div>
+            <div class="col-md-1 col-1">
+                <label>CBM</label>
+                <input type="text" id="CBM" class="form-control ps-1" style="padding:1px; text-align: center;" value="0.0" readonly>
+            </div>
+            <div class="col-md-1 col-1">
+                <label>Packing Type</label>
+                <select id="PackingType" class="form-control">
+                    <option value="=N/A=">=N/A=</option>
+                    <option value="Solid">Solid</option>
+                    <option value="Assorted">Assorted</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Total Invoice Qty</label>
+                <input type="text" id="TotalInvoiceQty" class="form-control ps-1" style="padding:1px; text-align: center;" value="0" readonly>
+            </div>
+            <div class="col-md-1 col-1">
+                <label>Rate</label>
+                <input type="text" id="Rate" class="form-control ps-1" style="padding:1px; text-align: center;">
+            </div>
+            <div class="col-md-1 col-1">
+                <label>Value</label>
+                <input type="text" id="TotalValue" class="form-control ps-1" style="padding:1px; text-align: center;" value="0" readonly>
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Shipment Authorization</label>
+                <input type="text" id="ShipmentAuthorization" class="form-control ps-1" style="padding:1px;">
+            </div>
+            <div class="col-md-1 col-1">
+                <label>Discount %</label>
+                <input type="text" id="Discount" class="form-control ps-1" style="padding:1px;">
+            </div>
+            <div class="col-md-1 col-1">
+                <label>CMP %</label>
+                <input type="text" id="CMPPercentage" class="form-control ps-1" style="padding:1px;">
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-2 col-2">
+                <label>CargoHandover Date</label>
+                <input id="CargoHandoverDate" class="form-control ps-1" style="padding:1px;">
+            </div>
+            <div class="col-md-1 col-1">
+                <label>Session</label>
+                <input type="text" id="Session" class="form-control ps-1" style="padding:1px; text-align: center;" value="0.0">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Carton Measurement</label>
+                <input type="text" id="CartonMeasurement" class="form-control ps-1" style="padding:1px;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Good description</label>
+                <input type="text" id="GoodsDescription" class="form-control ps-1" style="padding:1px;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Remarks</label>
+                <input type="text" id="Remarks" class="form-control ps-1" style="padding:1px;">
+            </div>
+            <div class="col-md-2 col-2">
+                <label>Container No.</label>
+                <input type="text" id="ContainerNo" class="form-control ps-1" style="padding:1px;">
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 30px;">
+        <div class="col-md-7 col-7">
+            <div id="previousInvoice"></div>
+        </div>
+    </div>
+    <div id="example-table" style="margin-top: 30px; margin-bottom: 5px;"></div>
+    <div class="row" style="margin-bottom: 50px;">
+        <div class="col-md-3 col-12">
+            <div class="btn-group">
+                <button type="button" class="btn btn-success btn-sm" id="add-row">Add Row</button>
+                @* <button type="button" class="btn btn-danger btn-sm" id="del-row">Clear Table</button> *@
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-bar">
+        <div class="container-fluid">
+            <div class="row px-4">
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-outline-secondary text-white btn-sm rounded-pill " id="BtnBack" onclick="gotoInvoiceList()">Cancel</button>
+                </div>
+                <div class="col-md-6 d-flex justify-content-center">
+                </div>
+
+                <div class="col-md-3 d-flex justify-content-end">
+                    <button class="btn btn-outline-secondary text-white btn-sm rounded-pill me-1" id="BtnSave">
+                        @if (ViewBag.ActionType == "Edit")
+                        {
+                            <span>Update</span>
+                        }
+                        else if (ViewBag.ActionType == "Create")
+                        {
+                            <span>Save </span>
+                        }
+
+                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-success btn-sm" id="BtnSaveClose">
+                            @if (ViewBag.ActionType == "Edit")
+                            {
+                                <span>Update and close</span>
+                            }
+                            else if (ViewBag.ActionType == "Create" || ViewBag.ActionType == "Copy")
+                            {
+                                <span>Save and close</span>
+                            }
+
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu" id="ul-id-for-expenses">
+                            <li><a class="dropdown-item" href="/Accounts/ImportTransaction">Time activity</a></li>
+                        </ul>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+        <input type="button" id="unknown" class="btn  btn-md" value="" />
+        <div class="dropdown" id="unknown1" style="display: inline-block;">
+        </div>
+    </div>
+</div>
+
+<div class="col-md-2  col-2">
+    <div id="customModal" class="modal">
+        <div class="modal-content" id="modal-content2">
+            <div class="row">
+                <div class="col-md-11 col-11">
+                    <p>Master LC Details</p>
+                </div>
+                <div class="col-md-1 col-1">
+                    <i class="bi bi-x-square-fill" style="color: red; font-size: 20px;" id="closeModal"></i>
+                </div>
+            </div>
+            
+            <div id="masterLCDetails"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-2  col-2">
+    <div id="childModal" class="modal">
+        <div class="modal-content" id="modal-content2">
+            <div class="row" style="border-bottom: 1px solid #dee2e6 ">
+                <div class="col-md-11 col-11">
+                    <h6>Export Invoice Packing List</h6>
+                </div>
+                <div class="col-md-1 col-1">
+                    <i class="bi bi-x-square-fill" style="color: red; font-size: 20px;" id="closechildModal"></i>
+                </div>
+            </div>
+
+            <div id="packinglist"></div>
+            <div class="row" style="margin-top: 10px;">
+                <div class="col-md-3 col-12">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-success btn-sm" id="add-packing">Add</button>
+                        <button type="button" class="btn btn-danger btn-sm" id="show-all">Show All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts
+{
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="~/admin_theme_gtr/assets/js/dateRangeMultipleFunctionForAccountsVoucherReport.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+    <script>
+        $('#MasterLCId').select2();
+        $('#BuyerGroupId').select2();
+        $('#DestinationId').select2();
+        $('#BuyerId').select2();
+        $('#FirstNotifyPartyId').select2();
+        $('#SecondNotifyPartyId').select2();
+        $('#ThirdNotifyPartyId').select2();
+        $('#CommercialCompanyId').select2();
+        $('#ManufactureId').select2();
+        $('#ShipModeId').select2();
+        $('#TradeTermId').select2();
+        $('#PortOfDischargeId').select2();
+        $('#PortOfLoadingId').select2();
+        $('#SupplierId').select2();
+        $('#PackingType').select2();
+
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetMasterLC", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#MasterLCId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+        
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetNotifyParty", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#FirstNotifyPartyId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                    $('#SecondNotifyPartyId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                    $('#ThirdNotifyPartyId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetBuyers", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#BuyerId').append('<option value="' + value.Id + '" data-currency-id="' + value.CustomerCurrencyId + '" >' + value.Name + '-' + value.CurrencyShortName + '</option>');
+                });
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetBuyerGroup", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#BuyerGroupId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetDestination", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#DestinationId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetComercialCompany", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#CommercialCompanyId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                    $('#ManufactureId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetShipMode", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#ShipModeId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetTradeTerm", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#TradeTermId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetLoadingPort", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#PortOfLoadingId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetDischargePort", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#PortOfDischargeId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+        
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetSupplier", "BuyerOrder")',
+            datatype: "Json",
+            success: function (data) {
+
+                $.each(data, function (index, value) {
+                    $('#SupplierId').append('<option value="' + value.Value + '" >' + value.Text + '</option>');
+                });
+            }
+        });
+
+
+        $(document).ready(function () {
+
+            var today = new Date();
+            var day = today.getDate();
+            var month = today.toLocaleString('default', { month: 'short' });
+            var year = today.getFullYear();
+
+            var formattedDay = (day < 10 ? '0' : '') + day;
+
+            var formattedDate = formattedDay + '-' + month + '-' + year;
+
+            document.getElementById('InvoiceDate').value = formattedDate;
+            document.getElementById('ExfactoryDate').value = formattedDate;
+            document.getElementById('OnboardDate').value = formattedDate;
+            document.getElementById('ExpDate').value = formattedDate;
+            document.getElementById('BLDate').value = formattedDate;
+            document.getElementById('ShippingBillDate').value = formattedDate;
+            document.getElementById('BookingDate').value = formattedDate;
+            document.getElementById('CargoHandoverDate').value = formattedDate;
+
+            $(function () {
+                $("#InvoiceDate").removeClass("hasDatepicker").datepicker({
+                    dateFormat: "dd-M-yy"
+                });
+                $("#ExfactoryDate").removeClass("hasDatepicker").datepicker({
+                    dateFormat: "dd-M-yy"
+                });
+                $("#OnboardDate").removeClass("hasDatepicker").datepicker({
+                    dateFormat: "dd-M-yy"
+                });
+                $("#ExpDate").removeClass("hasDatepicker").datepicker({
+                    dateFormat: "dd-M-yy"
+                });
+                $("#BLDate").removeClass("hasDatepicker").datepicker({
+                    dateFormat: "dd-M-yy"
+                });
+                $("#ShippingBillDate").removeClass("hasDatepicker").datepicker({
+                    dateFormat: "dd-M-yy"
+                });
+                $("#BookingDate").removeClass("hasDatepicker").datepicker({
+                    dateFormat: "dd-M-yy"
+                });
+                $("#CargoHandoverDate").removeClass("hasDatepicker").datepicker({
+                    dateFormat: "dd-M-yy"
+                });
+            });
+
+
+        });
+    </script>
+
+    <script>
+        var columns = [
+            {
+                headerSort: false,
+                field: "drag",
+                frozen: true,
+                formatter: function (cell, formatterParams) {
+                    return "<i class='fas fa-bars drag-icon'></i>";
+                },
+                width: 30,
+                rowHandle: true,
+            },
+            { title: "Com. Invoice No[Exp]", field: "InvoiceNo", movable: false, headerSort: false },
+            { title: "Destination", field: "Destination", movable: false, headerSort: false },
+            {
+                title: "Invoice Date", field: "InvoiceDate", editor: "input",
+                editorParams: {
+                    dateFormat: "d-M-Y",
+                },
+                cellEdited: function (cell) {
+                    cell.getRow().update({ "InvoiceDate": cell.getValue() });
+                },
+                editor: function (cell, onRendered, success, cancel, editorParams) {
+                    var input = document.createElement("input");
+                    input.type = "text";
+                    input.style.width = "100%";
+                    input.value = cell.getValue() || "";
+
+                    var flatpickrInstance = flatpickr(input, editorParams);
+
+                    flatpickrInstance.config.onClose.push(function (selectedDates, dateStr) {
+                        cell.setValue(dateStr);
+                        success(dateStr);
+                    });
+
+                    onRendered(function () {
+                        input.focus();
+                    });
+
+                    return input;
+                },
+            },
+            { title: "Total Invoice Qty", field: "TotalInvoiceQty", movable: false, headerSort: false },
+            { title: "Total Value", field: "TotalValue", movable: false, headerSort: false }
+        ];
+
+        var ReportColumn = {
+            title: "Report",
+            field: "Report",
+            hozAlign: "center",
+            formatter: function (cell, formatterParams) {
+                return "<i class='fas fa-file-pdf btn btn-success btn-xs'></i>";
+            },
+            //width: 30,
+            headerSort: false,
+            cellClick: function (e, cell) {
+                var rowData = cell.getRow().getData();
+                var row = cell.getRow();
+                ReportView(row);
+            }
+        };
+
+        columns.push(ReportColumn);
+
+        var CopyColumn = {
+            title: "Copy",
+            field: "Copy",
+            hozAlign: "center",
+            formatter: function (cell, formatterParams) {
+                return "<i class='fas fa-copy btn btn-info btn-xs'></i>";
+            },
+            //width: 30,
+            headerSort: false,
+            cellClick: function (e, cell) {
+                var rowData = cell.getRow().getData();
+                var row = cell.getRow();
+                CopyInvoice(row);
+            }
+        };
+
+        columns.push(CopyColumn);
+
+        function ReportView(row) {
+        }
+
+        function CopyInvoice(row) {
+        }
+
+        function formatDateToCustomStringForDate(inputDate) {
+            const months = [
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            ];
+
+            if (inputDate instanceof Date && !isNaN(inputDate)) {
+                const day = inputDate.getDate();
+                const monthIndex = inputDate.getMonth();
+                const year = inputDate.getFullYear();
+                const formattedDay = day < 10 ? `0${day}` : day;
+
+                const formattedDate = `${formattedDay}-${months[monthIndex]}-${year}`;
+                return formattedDate;
+            } else {
+                return inputDate;
+            }
+        }
+
+        function getPreviousExportInvoice(MasterLCId) {
+
+            var id = @ViewBag.Id;
+            var previousInvoiceTable = new Tabulator("#previousInvoice", {
+                layout: "fitColumns",
+                height: "fitDataFill",
+                selectable: 1,
+                pagination: true,
+                scrollHorizontal: true,
+                paginationMode: "remote",
+                paginationSize: 5,
+                paginationInitialPage: 1,
+                paginationSizeSelector: [5, 10, 25, 50, 100, true],
+                paginationCounter: "rows",
+                columnDefaults: {
+                    resizable: true,
+                },
+                ajaxURL: '@Url.Action("GetExportInvoiceList", "BuyerOrder")' + '?MasterLCId=' + MasterLCId + '&Id=' + id,
+                ajaxConfig: "get",
+                ajaxContentType: "json",
+                ajaxResponse: function (url, params, response) {
+                    previousInvoiceTable.setMaxPage(response.last_page);
+                    console.log("response.last_page", response.last_page);
+
+                    dataLoad = response.data;
+                    totalValue = response.total;
+
+                    dataLoad.forEach(function (item) {
+                        if (item.InvoiceDate) {
+                            const dateObject = new Date(item.InvoiceDate);
+                            item.InvoiceDate = formatDateToCustomStringForDate(dateObject);
+                        }
+                    });
+                    return {
+                        data: response.data,
+                        last_page: response.last_page,
+                        total: response.total
+                    };
+                },
+                columns: columns,
+            });
+        }
+
+
+        function showpackingListModal(data)
+        {
+            var modal = document.getElementById("childModal");
+            modal.style.display = "block";
+
+            packingtable.setFilter("MasterLCDetailsID", "=", data.MasterLCDetailsID);
+
+            var existingRow = packingtable.getData().find(function (row) {
+                return (
+                    row.MasterLCDetailsID === data.MasterLCDetailsID &&
+                    row.ExportOrderNo === data.ExportOrderNo &&
+                    row.UnitPrice === data.UnitPrice
+                );
+            });
+
+            if (!existingRow) {
+                packingtable.addRow({
+                    MasterLCDetailsID: data.MasterLCDetailsID,
+                    ExportOrderNo: data.ExportOrderNo,
+                    UnitPrice: data.UnitPrice,
+                    TotalValue: 0,
+                    ItemNumber: 0,
+                    UPCNumber: 0,
+                    Qty: 0,
+                    CartonQty: 0,
+                    GrossWeightLinePacking: 0,
+                    NetWeightLinePacking: 0,
+                    CBMLinePacking: 0,
+                    BoxLengthLinePacking: 0,
+                    BoxWidthLinePacking: 0,
+                    BoxHeightLinePacking: 0
+                });
+            }
+
+            renumberpackingRows();
+        }
+
+        var childcolumns = [
+            // {
+            //     headerSort: false,
+            //     field: "drag",
+            //     frozen: true,
+            //     formatter: function (cell, formatterParams) {
+            //         return "<i class='fas fa-bars drag-icon'></i>";
+            //     },
+            //     width: 30,
+            //     headerSort: false,
+            //     rowHandle: true,
+
+
+            // },
+            {
+                title: "",
+                field: "CheckBox",
+                headerHozAlign: "left",
+                width: "9px",
+                headerSort: false,
+                hozAlign: "left",
+                formatter: function (cell, formatterParams, onRendered) {
+                    var isChecked = cell.getValue() === true;
+
+                    var checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.checked = isChecked;
+
+                    checkbox.addEventListener("click", function (event) {
+                        var newValue = event.target.checked;
+                        // Update the cell value
+                        cell.setValue(newValue);
+                    });
+
+                    return checkbox;
+                },
+                cellClick: function (e, cell) {
+                    table.getRows().forEach(function (row) {
+                        row.getCell("CheckBox").setValue(false);
+                    });
+
+                    cell.getRow().getCell("CheckBox").setValue(true);
+                    showpackingListModal(cell.getRow().getData());
+                },
+                visible: true,
+                width: 50
+            },
+            { title: "Id", field: "Id", movable: false, visible: false },
+            { title: "MasterLCDetailsID", field: "MasterLCDetailsID", movable: false, visible: false },
+            { title: "SL.", field: "SLNo", headerSort: false, frozen: true, width: 5, bottomCalc: "count", hozAlign: "right" },
+            { title: "StyleNo", field: "StyleNo", movable: false,
+                formatter: function (cell, formatterParams, onRendered) {
+                    return "<span style='font-weight: bold; color: blue;'>" + cell.getValue() + "</span>";
+                },
+                cellClick: function (e, cell) {
+                    table.getRows().forEach(function (row) {
+                        row.getCell("CheckBox").setValue(false);
+                    });
+
+                    cell.getRow().getCell("CheckBox").setValue(true);
+                    showpackingListModal(cell.getRow().getData());
+                }
+            },
+            { title: "Export OrderNo", field: "ExportOrderNo", movable: false },
+            {
+                title: "Shipment Date", field: "ShipmentDate", 
+                editorParams: {
+                    dateFormat: "d-M-Y",
+                },
+                cellEdited: function (cell) {
+                    cell.getRow().update({ "ShipmentDate": cell.getValue() });
+                },
+                // editor: function (cell, onRendered, success, cancel, editorParams) {
+                //     var input = document.createElement("input");
+                //     input.type = "text";
+                //     input.style.width = "100%";
+                //     input.value = cell.getValue() || "";
+
+                //     var flatpickrInstance = flatpickr(input, editorParams);
+
+                //     flatpickrInstance.config.onClose.push(function (selectedDates, dateStr) {
+                //         cell.setValue(dateStr);
+                //         success(dateStr);
+                //     });
+
+                //     onRendered(function () {
+                //         input.focus();
+                //     });
+
+                //     return input;
+                // },
+            },
+            { title: "Destination", field: "Destination", movable: false },
+            { title: "LCQty", field: "LCQty", movable: false, bottomCalc: "sum" },
+            { title: "", field: "UnitMasterId", movable: false, visible: false },
+            { title: "Unit", field: "UnitMasterName", movable: false },
+            { title: "UnitPrice", field: "UnitPrice", movable: false, bottomCalc: "sum" },
+            { title: "Total Value", field: "TotalValue", movable: false, bottomCalc: "sum" },
+            { title: "Invoice Qty", field: "InvoiceQty", movable: false, editor: "input", bottomCalc: "sum" },
+            { title: "Invoice Rate", field: "InvoiceRate", movable: false, editor: "input", bottomCalc: "sum" },
+            { title: "Invoice Value", field: "InvoiceValue", movable: false, bottomCalc: "sum" },
+            { title: "Gross Weight", field: "GrossWeightLine", movable: false, editor: "input", bottomCalc: "sum" },
+            { title: "Net Weight", field: "NetWeightLine", movable: false, editor: "input", bottomCalc: "sum" },
+            { title: "CBM", field: "CBMLine", movable: false, editor: "input" },
+            { title: "Carton Qty", field: "CartonQty", movable: false, editor: "input", bottomCalc: "sum" },
+            { title: "Color Code", field: "ColorCode", movable: false, editor: "input" },
+            {
+                title: "LC/Contract Date", field: "ExportLCIssueDate", editor: "input",
+                editorParams: {
+                    dateFormat: "d-M-Y",
+                },
+                cellEdited: function (cell) {
+                    cell.getRow().update({ "ExportLCIssueDate": cell.getValue() });
+                },
+                editor: function (cell, onRendered, success, cancel, editorParams) {
+                    var input = document.createElement("input");
+                    input.type = "text";
+                    input.style.width = "100%";
+                    input.value = cell.getValue() || "";
+
+                    var flatpickrInstance = flatpickr(input, editorParams);
+
+                    flatpickrInstance.config.onClose.push(function (selectedDates, dateStr) {
+                        cell.setValue(dateStr);
+                        success(dateStr);
+                    });
+
+                    onRendered(function () {
+                        input.focus();
+                    });
+
+                    return input;
+                },
+            },
+            { title: "Box Length", field: "BoxLength", movable: false, editor: "input" },
+            { title: "Box Width", field: "BoxWidth", movable: false, editor: "input" },
+            { title: "Box Height", field: "BoxHeight", movable: false, editor: "input" },
+            { title: "DestinationPO", field: "DestinationPO", movable: false },
+        ];
+
+        var deleteColumn = {
+            title: "",
+            field: "Delete",
+            movable: false,
+            formatter: function (cell, formatterParams) {
+                return "<i class='fas fa-trash-alt delete-icon'></i>";
+            },
+            width: 30,
+            headerSort: false,
+            cellClick: function (e, cell) {
+                var rowData = cell.getRow().getData();
+                var row = cell.getRow();
+                deleteRow(row);
+            }
+        };
+
+        childcolumns.push(deleteColumn);
+
+        
+
+        var table = new Tabulator("#example-table", {
+            height: "311px",
+            //layout: "fitColumns",
+            addRowPos: "bottom",
+            columns: childcolumns,
+        });
+
+
+        var modalColumn = [
+            {
+                headerSort: false,
+                field: "drag",
+                frozen: true,
+                formatter: function (cell, formatterParams) {
+                    return "<i class='fas fa-bars drag-icon'></i>";
+                },
+                width: 30,
+                headerSort: false,
+                rowHandle: true,
+
+
+            },
+            { title: "Id", field: "Id", movable: false, visible: false },
+            { title: "MasterLCDetailsID", field: "MasterLCDetailsID", movable: false, visible: false },
+            { title: "SL.", field: "SLNo", headerSort: false, frozen: true, width: 5, bottomCalc: "count", hozAlign: "right" },
+            { title: "StyleNo", field: "StyleNo", movable: false, headerFilter: "input"  },
+            { title: "Export OrderNo", field: "ExportOrderNo", movable: false, headerFilter: "input" },
+            {
+                title: "Shipment Date", field: "ShipmentDate", headerFilter: "input",
+                editorParams: {
+                    dateFormat: "d-M-Y",
+                },
+                cellEdited: function (cell) {
+                    cell.getRow().update({ "ShipmentDate": cell.getValue() });
+                },
+            },
+            { title: "Destination", field: "Destination", movable: false, headerFilter: "input" },
+            { title: "LCQty", field: "LCQty", movable: false, headerFilter: "input", bottomCalc: "sum" },
+            { title: "", field: "UnitMasterId", movable: false, visible: false },
+            { title: "Unit", field: "UnitMasterName", movable: false, headerFilter: "input" },
+            { title: "UnitPrice", field: "UnitPrice", movable: false, headerFilter: "input", bottomCalc: "sum" },
+            { title: "Total Value", field: "TotalValue", movable: false, headerFilter: "input", bottomCalc: "sum" },
+            { title: "Invoice Qty", field: "InvoiceQty", movable: false, editor: "input", visible: false, bottomCalc: "sum" },
+            { title: "Invoice Rate", field: "InvoiceRate", movable: false, editor: "input", visible: false, bottomCalc: "sum" },
+            { title: "Invoice Value", field: "InvoiceValue", movable: false, visible: false, bottomCalc: "sum" },
+            {
+                title: "LC/Contract Date", field: "ExportLCIssueDate", editor: "input", headerFilter: "input",
+                editorParams: {
+                    dateFormat: "d-M-Y",
+                },
+                cellEdited: function (cell) {
+                    cell.getRow().update({ "ExportLCIssueDate": cell.getValue() });
+                },
+                editor: function (cell, onRendered, success, cancel, editorParams) {
+                    var input = document.createElement("input");
+                    input.type = "text";
+                    input.style.width = "100%";
+                    input.value = cell.getValue() || "";
+
+                    var flatpickrInstance = flatpickr(input, editorParams);
+
+                    flatpickrInstance.config.onClose.push(function (selectedDates, dateStr) {
+                        cell.setValue(dateStr);
+                        success(dateStr);
+                    });
+
+                    onRendered(function () {
+                        input.focus();
+                    });
+
+                    return input;
+                },
+            },
+            { title: "DestinationPO", field: "DestinationPO", movable: false, headerFilter: "input" },
+        ];
+
+
+
+        var addColumn = {
+            title: "Add",
+            field: "Add",
+            movable: false,
+            hozAlign: "center",
+            formatter: function (cell, formatterParams) {
+                return "<i class='bi bi-plus-square-fill' style='color: green; font-size: 20px;'></i>";
+            },
+            headerSort: false,
+            cellClick: function (e, cell) {
+                var rowData = cell.getRow().getData();
+                var row = cell.getRow();
+
+                // Add row to the main table
+                table.addRow(rowData);
+
+                // Remove row from the modal table
+                modalTable.deleteRow(row);
+            }
+        };
+
+        modalColumn.push(addColumn);
+
+        var modalTable = new Tabulator("#masterLCDetails", {
+            layout: "fitColumns",
+            addRowPos: "bottom",
+            columns: modalColumn,
+
+        });
+
+        var packingcolumns = [
+            {
+                headerSort: false,
+                field: "drag",
+                frozen: true,
+                formatter: function (cell, formatterParams) {
+                    return "<i class='fas fa-bars drag-icon'></i>";
+                },
+                width: 30,
+                headerSort: false,
+                rowHandle: true,
+
+
+            },
+            { title: "Id", field: "Id", movable: false, visible: false },
+            { title: "SL.", field: "PSLNo", headerSort: false, frozen: true, width: 5, bottomCalc: "count", hozAlign: "right" },
+            { title: "MasterLCDetailsID", field: "MasterLCDetailsID", movable: false },
+            { title: "Export OrderNo", field: "ExportOrderNo", movable: false },
+            { title: "Carton Qty", field: "CartonQty", movable: false, editor: "input" },
+            { title: "Item Number", field: "ItemNumber", movable: false, editor: "input" },
+            { title: "UPC Number", field: "UPCNumber", movable: false, editor: "input" },
+            { title: "Qty", field: "Qty", movable: false, editor: "input", bottomCalc: "sum" },
+            { title: "UnitPrice", field: "UnitPrice", movable: false },
+            { title: "Total Value", field: "TotalValue", movable: false, editor: "input", bottomCalc: "sum" },
+            { title: "Gross Weight", field: "GrossWeightLinePacking", movable: false, editor: "input" },
+            { title: "Net Weight", field: "NetWeightLinePacking", movable: false, editor: "input" },
+            { title: "CBM", field: "CBMLinePacking", movable: false, editor: "input" },
+            { title: "Box Length", field: "BoxLengthLinePacking", movable: false, editor: "input" },
+            { title: "Box Width", field: "BoxWidthLinePacking", movable: false, editor: "input" },
+            { title: "Box Height", field: "BoxHeightLinePacking", movable: false, editor: "input" },
+        ];
+
+        var deletepackingColumn = {
+            title: "",
+            field: "Delete",
+            movable: false,
+            formatter: function (cell, formatterParams) {
+                return "<i class='fas fa-trash-alt delete-icon'></i>";
+            },
+            width: 30,
+            headerSort: false,
+            cellClick: function (e, cell) {
+                var rowData = cell.getRow().getData();
+                var row = cell.getRow();
+                deletepackingRow(row);
+            }
+        };
+
+        packingcolumns.push(deletepackingColumn);
+
+
+
+        var packingtable = new Tabulator("#packinglist", {
+            height: "311px",
+            //layout: "fitColumns",
+            addRowPos: "bottom",
+            columns: packingcolumns,
+        });
+
+        function deletepackingRow(row) {
+
+            if (confirm("Are you sure you want to delete this row?")) {
+                packingtable.deleteRow(row);
+                renumberpackingRows();
+            }
+
+        }
+        
+        function deleteRow(row) {
+
+            if (confirm("Are you sure you want to delete this row?")) {
+                table.deleteRow(row);
+                renumberRows();
+            }
+
+        }
+        function renumberpackingRows() {
+            var rows = packingtable.getRows();
+            rows.forEach(function (row, index) {
+                row.update({ PSLNo: index + 1 });
+            });
+        }
+        
+        function renumberRows() {
+            var rows = table.getRows();
+            rows.forEach(function (row, index) {
+                row.update({ SLNo: index + 1 });
+            });
+        }
+
+        document.getElementById("show-all").addEventListener("click", function () {
+            packingtable.clearFilter();
+        });
+        document.getElementById("add-packing").addEventListener("click", function () {
+
+            var selectedRows = table.getRows().filter(function (row) {
+                return row.getData().CheckBox === true;
+            });
+
+            var selectedData = selectedRows.map(function (row) {
+                return row.getData();
+            });
+
+            packingtable.setFilter("MasterLCDetailsID", "=", selectedData[0].MasterLCDetailsID);
+
+            packingtable.addRow({
+                MasterLCDetailsID: selectedData[0].MasterLCDetailsID,
+                ExportOrderNo: selectedData[0].ExportOrderNo,
+                UnitPrice: selectedData[0].UnitPrice,
+                TotalValue: 0,
+                ItemNumber: 0,
+                UPCNumber: 0,
+                Qty: 0,
+                CartonQty: 0,
+                GrossWeightLinePacking: 0,
+                NetWeightLinePacking: 0,
+                CBMLinePacking: 0,
+                BoxLengthLinePacking: 0,
+                BoxWidthLinePacking: 0,
+                BoxHeightLinePacking: 0
+            });
+
+            renumberpackingRows();
+        });
+
+        function getMasterLCDetails()
+        {
+
+            var masterLCId = $("#MasterLCId").val();
+            var id = @ViewBag.Id;
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetMasterLCData", "BuyerOrder")',
+                data: { MasterLCId: masterLCId, Id: id },
+
+                success: function (response) {
+
+                    var model = response.data;
+                    console.log(model);
+                    $("#BuyerGroupId").val(model.BuyerGroupID).trigger('change');
+                    $("#DestinationId").val(model.DestinationId).trigger('change');
+                    $("#BuyerId").val(model.BuyerID).trigger('change');
+                    $("#CommercialCompanyId").val(model.CommercialCompanyId).trigger('change');
+                    $("#ManufactureId").val(model.CommercialCompanyId).trigger('change');
+                    $("#ShipModeId").val(model.ShipModeId).trigger('change');
+                    $("#PortOfLoadingId").val(model.PortOfLoadingId).trigger('change');
+                    $("#PortOfDischargeId").val(model.PortOfDischargeId).trigger('change');
+                    $("#TotalLCQty").val(model.TotalLCQty);
+                    $("#TotalShipped").val(model.TotalShipped);
+                    $("#TotalCartonQty").val(model.TotalCartonQty);
+                    $("#TotalInvoiceQty").val(model.TotalLCQty);
+                    //initializeTabulator(model.COM_MasterLC_Details);
+
+                },
+                error: function (error) {
+                    console.error("Error fetching price:", error);
+                }
+            });
+
+            getPreviousExportInvoice(masterLCId);
+            table.clearData();
+            packingtable.clearData();
+        }
+
+        function getModalTabledata() {
+            var masterLCId = $("#MasterLCId").val();
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetNonZeroOrderQtyMasterLC", "BuyerOrder")',
+                data: { MasterLCId: masterLCId },
+
+                success: function (response) {
+
+                    var model = response.data;
+                    console.log(model);
+                    
+                    initializeTabulator(model);
+
+                },
+                error: function (error) {
+                    console.error("Error fetching price:", error);
+                }
+            });
+        }
+
+        $("#MasterLCId").on("select2:select", function () {
+            getMasterLCDetails();
+        });
+
+        document.getElementById("add-row").addEventListener("click", function () {
+            var modal = document.getElementById("customModal");
+            modal.style.display = "block";
+
+            getModalTabledata();
+        });
+        document.getElementById("closeModal").addEventListener("click", function () {
+            var modal = document.getElementById("customModal");
+            modal.style.display = "none";
+        });
+        
+        document.getElementById("closechildModal").addEventListener("click", function () {
+            var modal = document.getElementById("childModal");
+            modal.style.display = "none";
+        });
+
+
+        var modal = document.getElementById('customModal');
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        var childmodal = document.getElementById('childModal');
+
+        window.onclick = function (event) {
+            if (event.target == childmodal) {
+                childmodal.style.display = "none";
+            }
+        }
+
+
+        function initializeTabulator(data) {
+            if (modalTable) {
+                data.forEach(function (row, index) {
+                    var dateObj1 = new Date(row.ShipmentDate);
+                    var dateObj2 = new Date(row.ContractDate);
+                    
+                    row.ShipmentDate = dateObj1.getDate() + '-' +
+                        new Intl.DateTimeFormat('en-us', { month: 'short' }).format(dateObj1) + '-' +
+                        dateObj1.getFullYear();
+
+                    row.ExportLCIssueDate = dateObj2.getDate() + '-' +
+                        new Intl.DateTimeFormat('en-us', { month: 'short' }).format(dateObj2) + '-' +
+                        dateObj2.getFullYear();
+
+                    row.SLNo = index + 1;
+                });
+                modalTable.setData(data);
+            } else {
+                modalTable = new Tabulator("#masterLCDetails", {
+                    layout: "fitColumns",
+                    addRowPos: "bottom",
+                    columns: modalColumn,
+                    data: data,
+                });
+            }
+        }
+        function initializeTabulatorEdit(data) {
+            if (table) {
+                data.forEach(function (row, index) {
+                    var dateObj1 = new Date(row.ShipmentDate);
+                    var dateObj2 = new Date(row.ContractDate);
+
+                    row.ShipmentDate = dateObj1.getDate() + '-' +
+                        new Intl.DateTimeFormat('en-us', { month: 'short' }).format(dateObj1) + '-' +
+                        dateObj1.getFullYear();
+
+                    row.ExportLCIssueDate = dateObj2.getDate() + '-' +
+                        new Intl.DateTimeFormat('en-us', { month: 'short' }).format(dateObj2) + '-' +
+                        dateObj2.getFullYear();
+
+                    row.SLNo = index + 1;
+                });
+                table.setData(data);
+            } else {
+                table = new Tabulator("#masterLCDetails", {
+                    layout: "fitColumns",
+                    addRowPos: "bottom",
+                    columns: modalColumn,
+                    data: data,
+                });
+            }
+        }
+
+        function initializepackingTableEdit(data) {
+            if (packingtable) {
+                data.forEach(function (row, index) {
+                    
+                    row.PSLNo = index + 1;
+                });
+                packingtable.setData(data);
+            } else {
+                packingtable = new Tabulator("#packinglist", {
+                    layout: "fitColumns",
+                    addRowPos: "bottom",
+                    columns: packingcolumns,
+                    data: data,
+                });
+            }
+        }
+
+        table.on("cellEdited", function (cell) {
+            var editedCell = cell.getField();
+
+            if (editedCell === "InvoiceQty" || editedCell === "InvoiceRate") {
+                var data = cell.getRow().getData();
+
+                var newValue = data.InvoiceQty * data.InvoiceRate;
+
+                cell.getRow().update({ InvoiceValue: newValue });
+            }
+
+            if (editedCell === "GrossWeightLine") {
+                var allData = table.getData();
+                var sumGrossWeightLine = allData.reduce(function (acc, row) {
+                    return acc + parseFloat(row.GrossWeightLine || 0);
+                }, 0);
+
+                $("#GrossWeight").val(sumGrossWeightLine);
+            }
+
+            if (editedCell === "NetWeightLine") {
+                var allData = table.getData();
+                var sumNetWeightLine = allData.reduce(function (acc, row) {
+                    return acc + parseFloat(row.NetWeightLine || 0);
+                }, 0);
+
+                $("#NetWeight").val(sumNetWeightLine);
+            }
+
+            if (editedCell === "CartonQty") {
+                var allData = table.getData();
+                var sumCartonQty = allData.reduce(function (acc, row) {
+                    return acc + parseFloat(row.CartonQty || 0);
+                }, 0);
+
+                $("#TotalCartonQty").val(sumCartonQty);
+            }
+
+            if (editedCell === "CBMLine") {
+                var allData = table.getData();
+                var sumCBMLine = allData.reduce(function (acc, row) {
+                    return acc + parseFloat(row.CBMLine || 0);
+                }, 0);
+
+                $("#CBM").val(sumCBMLine);
+            }
+
+            var allData = table.getData();
+            var sumInvoiceQty = allData.reduce(function (acc, row) {
+                return acc + parseFloat(row.InvoiceQty || 0);
+            }, 0);
+
+            var sumInvoiceValue = allData.reduce(function (acc, row) {
+                return acc + parseFloat(row.InvoiceValue || 0);
+            }, 0);
+
+            var sumInvoiceRate = sumInvoiceValue / sumInvoiceQty;
+
+            $("#TotalInvoiceQty").val(sumInvoiceQty);
+            $("#TotalValue").val(sumInvoiceValue);
+            $("#Rate").val(sumInvoiceRate.toFixed(2));
+        });
+
+        function gatherData() {
+
+            var dataList = [];
+            var packingdataList = [];
+            var ComId = '@HttpContextAccessor.HttpContext.Session.GetInt32("ComId").ToString()';
+
+
+            var rows = table.getData();
+            var packingrows = packingtable.getData();
+            var id = @ViewBag.Id;
+
+            packingrows.forEach(function (row) {
+                var rowData = {
+                    "Id": row["Id"] == null ? 0 : parseInt(row["Id"]),
+                    "ExportPoNo": row.ExportOrderNo,
+                    "CartonQty": parseInt(row.CartonQty),
+                    "ItemNumber": row.ItemNumber,
+                    "UPCNumber": row.UPCNumber,
+                    "Qty": parseFloat(row.Qty),
+                    "UnitPrice": parseFloat(row.UnitPrice),
+                    "TotalValue": parseFloat(row.TotalValue),
+                    "GrossWeightLinePacking": parseFloat(row.GrossWeightLinePacking),
+                    "NetWeightLinePacking": parseFloat(row.NetWeightLinePacking),
+                    "CBMLinePacking": parseFloat(row.CBMLinePacking),
+                    "BoxLengthLinePacking": parseFloat(row.BoxLengthLinePacking),
+                    "BoxWidthLinePacking": parseFloat(row.BoxWidthLinePacking),
+                    "BoxHeightLinePacking": parseFloat(row.BoxHeightLinePacking),
+                    "ExportInvoiceDetailsId": 0,
+                    "ComId": ComId
+                };
+                packingdataList.push(rowData);
+            });
+
+
+            var groupedPackingRows = {};
+            packingdataList.forEach(function (packingRow) {
+                var ExportPoNo = packingRow.ExportPoNo;
+                if (!groupedPackingRows[ExportPoNo]) {
+                    groupedPackingRows[ExportPoNo] = [];
+                }
+                groupedPackingRows[ExportPoNo].push(packingRow);
+            });
+
+            rows.forEach(function (row) {
+                var exportOrderNo = row.ExportOrderNo;
+                var packingDataForExportOrder = groupedPackingRows[exportOrderNo] || [];
+
+                var rowData = {
+                    "Id": row["Id"] == null ? 0 : parseInt(row["Id"]),
+                    "MasterLCDetailsID": row.MasterLCDetailsID,
+                    "ExportPoNo": row.ExportOrderNo,
+                    "ShipmentDate": new Date(row.ShipmentDate),
+                    "StyleNo": row.StyleNo,
+                    "Destination": row.Destination,
+                    "LCQty": row.LCQty,
+                    "UnitMasterId": row.UnitMasterId,
+                    "InvoiceQty": parseFloat(row.InvoiceQty),
+                    "InvoiceRate": parseFloat(row.InvoiceRate),
+                    "InvoiceValue": parseFloat(row.InvoiceValue),
+                    "GrossWeightLine": parseFloat(row.GrossWeightLine),
+                    "NetWeightLine": parseFloat(row.NetWeightLine),
+                    "CBMLine": parseFloat(row.CBMLine),
+                    "CartonQty": row.CartonQty,
+                    "ColorCode": row.ColorCode,
+                    "ExportLCIssueDate": new Date(row.ExportLCIssueDate),
+                    "BoxLength": parseFloat(row.BoxLength),
+                    "BoxWidth": parseFloat(row.BoxWidth),
+                    "BoxHeight": parseFloat(row.BoxHeight),
+                    "ExportInvoiceMasterId": id,
+                    "ExportInvoicePackingLists": packingDataForExportOrder,
+                    "ComId": ComId
+                };
+                dataList.push(rowData);
+            });
+
+            // rows.forEach(function (row) {
+            //     var rowData = {
+            //         "Id": row["Id"] == null ? 0 : parseInt(row["Id"]),
+            //         "MasterLCDetailsID": row.MasterLCDetailsID,
+            //         "ExportPoNo": row.ExportOrderNo,
+            //         "ShipmentDate": new Date(row.ShipmentDate),
+            //         "StyleNo": row.StyleNo,
+            //         "Destination": row.Destination,
+            //         "LCQty": row.LCQty,
+            //         "UnitMasterId": row.UnitMasterId,
+            //         "InvoiceQty": parseFloat(row.InvoiceQty),
+            //         "InvoiceRate": parseFloat(row.InvoiceRate),
+            //         "InvoiceValue": parseFloat(row.InvoiceValue),
+            //         "GrossWeightLine": parseFloat(row.GrossWeightLine),
+            //         "NetWeightLine": parseFloat(row.NetWeightLine),
+            //         "CBMLine": parseFloat(row.CBMLine),
+            //         "CartonQty": row.CartonQty,
+            //         "ColorCode": row.ColorCode,
+            //         "ExportLCIssueDate": new Date(row.ExportLCIssueDate),
+            //         "BoxLength": parseFloat(row.BoxLength),
+            //         "BoxWidth": parseFloat(row.BoxWidth),
+            //         "BoxHeight": parseFloat(row.BoxHeight),
+            //         "ExportInvoiceMasterId": id,
+            //         "ExportInvoicePackingLists": 
+            //         "ComId": ComId
+            //     };
+            //     dataList.push(rowData);
+            // });
+
+
+            var masterLCData = {
+                Id: id,
+                MasterLCId: parseInt($("#MasterLCId").val()),
+                //DestinationId: parseInt($("#DestinationId").val()),
+                BuyerId: parseInt($("#BuyerId").val()),
+                FirstNotifyPartyId: parseInt($("#FirstNotifyPartyId").val()),
+                SecondNotifyPartyId: parseInt($("#SecondNotifyPartyId").val()),
+                ThirdNotifyPartyId: parseInt($("#ThirdNotifyPartyId").val()),
+                CommercialCompanyId: parseInt($("#CommercialCompanyId").val()),
+                ManufactureId: parseInt($("#ManufactureId").val()),
+                ShipModeId: parseInt($("#ShipModeId").val()),
+                InvoiceNo: $("#InvoiceNo").val(),
+                InvoiceDate: new Date($("#InvoiceDate").val()),
+                TradeTermId: parseInt($("#TradeTermId").val()),
+                PortOfLoadingId: parseInt($("#PortOfLoadingId").val()),
+                PortOfDischargeId: parseInt($("#PortOfDischargeId").val()),
+                SupplierId: parseInt($("#SupplierId").val()),
+                ExfactoryDate: new Date($("#ExfactoryDate").val()),
+                OnboardDate: new Date($("#OnboardDate").val()),
+                ExpNo: $("#ExpNo").val(),
+                ExpDate: new Date($("#ExpDate").val()),
+                TotalLCQty: parseFloat($("#TotalLCQty").val()),
+                VesselName: $("#VesselName").val(),
+                VoyageNo: $("#VoyageNo").val(),
+                BLNo: $("#BLNo").val(),
+                BLDate: new Date($("#BLDate").val()),
+                ShippingBillNo: $("#ShippingBillNo").val(),
+                ShippingBillDate: new Date($("#ShippingBillDate").val()),
+                BookingNo: $("#BookingNo").val(),
+                BookingDate: new Date($("#BookingDate").val()),
+                TotalShipped: parseFloat($("#TotalShipped").val()),
+                TotalCartonQty: parseFloat($("#TotalCartonQty").val()),
+                BalanceShip: parseFloat($("#BalanceShip").val()),
+                NetWeight: parseFloat($("#NetWeight").val()),
+                GrossWeight: parseFloat($("#GrossWeight").val()),
+                CBM: parseFloat($("#CBM").val()),
+                PackingType: $("#PackingType").val(),
+                TotalInvoiceQty: parseFloat($("#TotalInvoiceQty").val()),
+                Rate: parseFloat($("#Rate").val()),
+                TotalValue: parseFloat($("#TotalValue").val()),
+                ShipmentAuthorization: $("#ShipmentAuthorization").val(),
+                Discount: parseFloat($("#Discount").val()),
+                CMPPercentage: parseFloat($("#CMPPercentage").val()),
+                CargoHandoverDate: new Date($("#CargoHandoverDate").val()),
+                Session: $("#Session").val(),
+                CartonMeasurement: $("#CartonMeasurement").val(),
+                GoodsDescription: $("#GoodsDescription").val(),
+                Remarks: $("#Remarks").val(),
+                ContainerNo: $("#ContainerNo").val(),
+                ExportInvoiceDetails: dataList
+            };
+
+
+            return masterLCData;
+
+        }
+
+
+        function sendDataToServer() {
+            var invoiceData = gatherData();
+
+            var data = JSON.stringify(invoiceData);
+
+
+            $.ajax({
+
+                url: '@Url.Action("ExportInvoiceCreation", "BuyerOrder")',
+                type: 'POST',
+                data: data,
+                async: false,
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                success: function (response) {
+                    toastr.success(response.message, "", {
+                        "toastClass": "toast-green",
+                    });
+                    setTimeout(function () {
+                        window.location.href = '@Url.Action("Export", "BuyerOrder", new { Type = "ExportInvoice" })';
+                    }, 1000);
+                },
+                error: function (error) {
+                    console.log("Error");
+                }
+            });
+
+        }
+
+
+        var saveButton = document.getElementById('BtnSave');
+        saveButton.addEventListener('click', function () {
+            sendDataToServer();
+        });
+
+        var saveButton = document.getElementById('BtnSaveClose');
+        saveButton.addEventListener('click', function () {
+            sendDataToServer();
+        });
+
+        function formatDateToCustomString(inputDate) {
+            const months = [
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            ];
+
+            if (inputDate instanceof Date && !isNaN(inputDate)) {
+                const day = inputDate.getDate();
+                const monthIndex = inputDate.getMonth();
+                const year = inputDate.getFullYear();
+                const formattedDay = day < 10 ? `0${day}` : day;
+
+                const formattedDate = `${formattedDay}-${months[monthIndex]}-${year}`;
+                return formattedDate;
+            } else {
+                return inputDate;
+            }
+        }
+
+        if ('@actiontype' === "Edit") {
+            var id = @ViewBag.Id;
+            console.log(id);
+
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetExportInvoiceDetails", "BuyerOrder")',
+                data: { id: id },
+                dataType: "json",
+                success: function (response) {
+                    console.log(response.data);
+                    var model = response.data[0];
+
+                    $("#Id").val(model.Id);
+                    $("#MasterLCId").val(model.MasterLCId).trigger('change');
+                    $("#BuyerGroupId").val(model.BuyerGroupId).trigger('change');
+                    $("#DestinationId").val(model.DestinationId).trigger('change');
+                    $("#BuyerId").val(model.BuyerId).trigger('change');
+                    $("#FirstNotifyPartyId").val(model.FirstNotifyPartyId).trigger('change');
+                    $("#SecondNotifyPartyId").val(model.SecondNotifyPartyId).trigger('change');
+                    $("#ThirdNotifyPartyId").val(model.ThirdNotifyPartyId).trigger('change');
+                    $("#CommercialCompanyId").val(model.CommercialCompanyId).trigger('change');
+                    $("#ManufactureId").val(model.ManufactureId).trigger('change');
+                    $("#ShipModeId").val(model.ShipModeId).trigger('change');
+                    $("#InvoiceNo").val(model.InvoiceNo);
+                    $("#InvoiceDate").val(formatDateToCustomString(new Date(model.InvoiceDate)));
+                    $("#TradeTermId").val(model.TradeTermId).trigger('change');
+                    $("#PortOfLoadingId").val(model.PortOfLoadingId).trigger('change');
+                    $("#PortOfDischargeId").val(model.PortOfDischargeId).trigger('change');
+                    $("#SupplierId").val(model.SupplierId).trigger('change');
+                    $("#ExfactoryDate").val(formatDateToCustomString(new Date(model.ExfactoryDate)));
+                    $("#OnboardDate").val(formatDateToCustomString(new Date(model.OnboardDate)));
+                    $("#ExpNo").val(model.ExpNo);
+                    $("#ExpDate").val(formatDateToCustomString(new Date(model.ExpDate)));
+                    $("#TotalLCQty").val(model.TotalLCQty);
+                    $("#VesselName").val(model.VesselName);
+                    $("#VoyageNo").val(model.VoyageNo);
+                    $("#BLNo").val(model.BLNo);
+                    $("#BLDate").val(formatDateToCustomString(new Date(model.BLDate)));
+                    $("#ShippingBillNo").val(model.ShippingBillNo);
+                    $("#ShippingBillDate").val(formatDateToCustomString(new Date(model.ShippingBillDate)));
+                    $("#BookingNo").val(model.BookingNo).trigger('change');
+                    $("#BookingDate").val(formatDateToCustomString(new Date(model.BookingDate)));
+                    $("#TotalShipped").val(model.TotalShipped);
+                    $("#TotalCartonQty").val(model.TotalCartonQty);
+                    $("#BalanceShip").val(model.BalanceShip);
+                    $("#NetWeight").val(model.NetWeight);
+                    $("#GrossWeight").val(model.GrossWeight);
+                    $("#CBM").val(model.CBM);
+                    $("#PackingType").val(model.PackingType).trigger('change');
+                    $("#TotalInvoiceQty").val(model.TotalInvoiceQty);
+                    $("#Rate").val(model.Rate);
+                    $("#TotalValue").val(model.TotalValue);
+                    $("#ShipmentAuthorization").val(model.ShipmentAuthorization);
+                    $("#Discount").val(model.Discount);
+                    $("#CMPPercentage").val(model.CMPPercentage);
+                    $("#CargoHandoverDate").val(formatDateToCustomString(new Date(model.CargoHandoverDate)));
+                    $("#Session").val(model.Session);
+                    $("#CartonMeasurement").val(model.CartonMeasurement);
+                    $("#GoodsDescription").val(model.GoodsDescription);
+                    $("#Remarks").val(model.Remarks);
+                    $("#ContainerNo").val(model.ContainerNo);
+
+                    initializeTabulatorEdit(response.details);
+                    getPreviousExportInvoice(model.MasterLCId);
+                    initializepackingTableEdit(response.packing);
+
+                },
+                error: function (error) {
+                    console.error("Error fetching data: " + error);
+                }
+            });
+        }
+    </script>
+
+    <script>
+
+    </script>
+}

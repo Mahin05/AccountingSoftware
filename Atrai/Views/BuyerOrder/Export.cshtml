@@ -1,0 +1,938 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = "Export List";
+    Layout = "~/Views/Shared/_adminLayout.cshtml";
+    var ListType = ViewBag.ListType as string;
+
+}
+<link href="~/css/accountHeadListGearDropdown.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<style>
+    .tabulator {
+        border: none;
+    }
+
+    .tabulator-col .tabulator-col-title {
+        text-align: center;
+    }
+
+    .tabulator-tableholder {
+        background-color: white;
+    }
+
+    .tabulator[tabulator-layout=fitDataTable] {
+        display: inherit;
+    }
+
+    .tabulator .tabulator-header .tabulator-col, .tabulator .tabulator-header {
+        background-color: white;
+        border-right: 1px solid #dee2e6;
+    }
+
+    .tabulator-row .tabulator-cell.tabulator-frozen.tabulator-frozen-left {
+        border-right: 2px solid #aaaaaa38;
+    }
+
+    .tabulator-row .tabulator-cell {
+        border-right: 1px solid #aaaaaa38;
+        border-left: 1px solid #aaaaaa38;
+    }
+
+    .tabulator-cell {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .tabulator .tabulator-row .active-cell {
+        overflow: visible;
+    }
+
+    .tabulator-row:nth-child(even) {
+        background-color: white;
+    }
+
+    .tabulator-row {
+        border: none;
+    }
+
+    #modal-content2 {
+        background-color: #fefefe;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 30%;
+    }
+
+    .input-group-text{
+        background-color: white;
+        border: 1px solid white;
+    }
+    
+</style>
+
+<div class="col-lg-4">
+    <p class="fs-4 fw-bold">Master LC List</p>
+</div>
+<ul class="nav nav-tabs mt-5">
+    <li class="nav-item">
+        <a class="nav-link active fw-semibold" aria-current="page" href="#" id="MasterLC">Master LC</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link fw-semibold" href="#" id="ExportInvoice">Export Invoice</a>
+    </li>
+     <li class="nav-item">
+        <a class="nav-link fw-semibold" href="#" id="Realization">Realization Entry</a>
+    </li>
+</ul>
+
+<div id="masterLC_view_id" class="d-none">
+    <div class="row p-2" style="border-bottom: 1px solid #dee2e6;">
+        <div class="col-md-2 col-2">
+            <button class="btn btn-success fw-bold ms-3 mt-3 h-70 my-2" type="button" data-bs-toggle="dropdown" onclick="gotoCreateMasterLC()">
+                New Master LC
+            </button>
+        </div>
+        <div class="col-md-4 col-4"></div>
+        <div class="col-md-3 col-3">
+            <div class="input-group mt-3">
+                <input type="file" class="form-control" id="inputGroupFile02">
+                <button type="button" class="btn btn-primary h-70">Upload</button>
+            </div>
+            
+
+        </div>
+        <div class="col-md-3 col-3 d-flex justify-content-end h-70">
+            <button type="button" class="btn btn-primary mt-3">Download Sample Format</button>
+        </div>
+        <div class="col-md-7 col-7 d-flex">
+            <div class="input-group flex-nowrap" style="width: 30%;">
+              <span class="input-group-text" id="addon-wrapping">From</span>
+              <input type="text" class="form-control" placeholder="Select Date">
+            </div>
+            <div class="input-group flex-nowrap" style="width: 30%;">
+                <span class="input-group-text" id="addon-wrapping">To</span>
+                <input type="text" class="form-control" placeholder="Select Date">
+            </div>
+            <button class="btn btn-success fw-bold ms-3" type="button" data-bs-toggle="dropdown" >
+                Invoice Report
+            </button>
+        </div>
+        <div class="col-md-3 col-3">
+            <div class="input-group">
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="radio" name="fileType" value="pdf">
+                    <label>PDF</label>
+                </div>
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="radio" name="fileType" value="excel">
+                    <label>Excel</label>
+                </div>
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="radio" name="fileType" value="word">
+                    <label>Word</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-md-3 col-3">
+            <div class="input-group">
+                <span class="input-group-text">Search</span>
+                <input type="text" class="form-control">
+                <button class="btn btn-success" type="button">Search</button>
+                <button class="btn btn-warning" type="button">Clear</button>
+            </div>
+        </div>
+        <div class="col-md-9 col-9">
+            <div class="d-flex justify-content-end">
+                <button title="Print" class="btn btn-white border-0" type="button" id="masterLCPrint-pdf" style="padding: 0px;padding-bottom: 10px;"
+                        aria-expanded="false">
+                    <i class="bi bi-printer fs-5" style=" margin-right: 0px; "></i>
+                </button>
+                <button title="Export to excel" class="btn btn-white border-0" type="button" id="masterLCPrint-excel" style="padding: 0px;padding-bottom: 10px;"
+                        aria-expanded="false">
+                    <i class="bi bi-file-earmark-excel fs-5" style=" margin-right: 0px; "></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div id="example-table"></div>
+</div>
+
+<div id="exportInvoice_view_id" class="d-none">
+
+    <div class="row p-2" style="border-bottom: 1px solid #dee2e6;">
+        <div class="col-md-2 col-2">
+            <button class="btn btn-success fw-bold ms-3 mt-3 h-70 my-2" type="button" data-bs-toggle="dropdown" onclick="gotoCreateExportInvoice()">
+                New Export Invoice
+            </button>
+        </div>
+        <div class="col-md-4 col-4"></div>
+        <div class="col-md-3 col-3"></div>
+        <div class="col-md-3 col-3 d-flex justify-content-end h-70">
+            <button type="button" class="btn btn-primary mt-3">Download Sample Format</button>
+        </div>
+        <div class="col-md-7 col-7 d-flex">
+            <div class="input-group flex-nowrap" style="width: 30%;">
+              <span class="input-group-text" id="addon-wrapping">From</span>
+              <input type="text" class="form-control" placeholder="Select Date">
+            </div>
+            <div class="input-group flex-nowrap" style="width: 30%;">
+                <span class="input-group-text" id="addon-wrapping">To</span>
+                <input type="text" class="form-control" placeholder="Select Date">
+            </div>
+            <button class="btn btn-success fw-bold ms-3" type="button" data-bs-toggle="dropdown" >
+                Invoice Report
+            </button>
+        </div>
+        <div class="col-md-3 col-3">
+            <div class="input-group">
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="radio" name="fileType" value="pdf">
+                    <label>PDF</label>
+                </div>
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="radio" name="fileType" value="excel">
+                    <label>Excel</label>
+                </div>
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="radio" name="fileType" value="word">
+                    <label>Word</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-3 col-3">
+            <div class="input-group">
+                <span class="input-group-text">Search</span>
+                <input type="text" class="form-control">
+                <button class="btn btn-success" type="button">Search</button>
+                <button class="btn btn-warning" type="button">Clear</button>
+            </div>
+        </div>
+        <div class="col-md-9 col-9">
+            <div class="d-flex justify-content-end">
+                <button title="Print" class="btn btn-white border-0" type="button" id="exportInvoicePrint-pdf" style="padding: 0px;padding-bottom: 10px;"
+                        aria-expanded="false">
+                    <i class="bi bi-printer fs-5" style=" margin-right: 0px; "></i>
+                </button>
+                <button title="Export to excel" class="btn btn-white border-0" type="button" id="exportInvoicePrint-excel" style="padding: 0px;padding-bottom: 10px;"
+                        aria-expanded="false">
+                    <i class="bi bi-file-earmark-excel fs-5" style=" margin-right: 0px; "></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="exportInvoice-table"></div>
+</div>
+
+<div id="Realization_view_id" class="d-none">
+
+    <div class="row p-2" style="border-bottom: 1px solid #dee2e6;">
+        <div class="col-md-2 col-2">
+            <button class="btn btn-success fw-bold ms-3 mt-3 h-70 my-2" type="button" data-bs-toggle="dropdown" onclick="gotoCreateRealization()">
+                New Realization
+            </button>
+        </div>
+        <div class="col-md-4 col-4"></div>
+        <div class="col-md-3 col-3"></div>
+        <div class="col-md-3 col-3 d-flex justify-content-end h-70">
+            <button type="button" class="btn btn-primary mt-3">Download Sample Format</button>
+        </div>
+        <div class="col-md-7 col-7 d-flex">
+            <div class="input-group flex-nowrap" style="width: 30%;">
+              <span class="input-group-text" id="addon-wrapping">From</span>
+              <input type="text" class="form-control" placeholder="Select Date">
+            </div>
+            <div class="input-group flex-nowrap" style="width: 30%;">
+                <span class="input-group-text" id="addon-wrapping">To</span>
+                <input type="text" class="form-control" placeholder="Select Date">
+            </div>
+            <button class="btn btn-success fw-bold ms-3" type="button" data-bs-toggle="dropdown" >
+                Invoice Report
+            </button>
+        </div>
+        <div class="col-md-3 col-3">
+            <div class="input-group">
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="radio" name="fileType" value="pdf">
+                    <label>PDF</label>
+                </div>
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="radio" name="fileType" value="excel">
+                    <label>Excel</label>
+                </div>
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="radio" name="fileType" value="word">
+                    <label>Word</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-3 col-3">
+            <div class="input-group">
+                <span class="input-group-text">Search</span>
+                <input type="text" class="form-control">
+                <button class="btn btn-success" type="button">Search</button>
+                <button class="btn btn-warning" type="button">Clear</button>
+            </div>
+        </div>
+        <div class="col-md-9 col-9">
+            <div class="d-flex justify-content-end">
+                <button title="Print" class="btn btn-white border-0" type="button" id="realizationPrint-pdf" style="padding: 0px;padding-bottom: 10px;"
+                        aria-expanded="false">
+                    <i class="bi bi-printer fs-5" style=" margin-right: 0px; "></i>
+                </button>
+                <button title="Export to excel" class="btn btn-white border-0" type="button" id="realizationPrint-excel" style="padding: 0px;padding-bottom: 10px;"
+                        aria-expanded="false">
+                    <i class="bi bi-file-earmark-excel fs-5" style=" margin-right: 0px; "></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="realization-table"></div>
+</div>
+
+
+<div class="col-md-2  col-2">
+    <div id="customModal" class="modal">
+        <div class="modal-content" id="modal-content2">
+            <p>Are you sure you want to delete?</p>
+            <div class="row">
+                <div class="col-md-6 col-6">
+                    <button id="confirmBtn" class="btn btn-success" style="width: 100px">OK</button>
+                </div>
+                <div class="col-md-6 col-6 d-flex justify-content-end">
+                    <button id="cancelBtn" class="btn btn-danger" style="width: 100px">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script src="~/admin_theme_gtr/assets/js/dateRangeMultipleFunctionForAccountsVoucherReport.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+    <script>
+        if ('@ListType' === "MasterLC") {
+            $("#MasterLC").addClass("active");
+            $("#ExportInvoice").removeClass("active");
+            $("#Realization").removeClass("active");
+
+            $("#masterLC_view_id").removeClass("d-none");
+            $("#exportInvoice_view_id").addClass("d-none");
+            $("#Realization_view_id").addClass("d-none");
+
+            initTabulator();
+        }
+
+        $("#MasterLC").on("click", function () {
+            $("#MasterLC").addClass("active");
+            $("#ExportInvoice").removeClass("active");
+            $("#Realization").removeClass("active");
+
+            $("#masterLC_view_id").removeClass("d-none");
+            $("#exportInvoice_view_id").addClass("d-none");
+            $("#Realization_view_id").addClass("d-none");
+
+            initTabulator();
+        })
+
+        function gotoCreateMasterLC() {
+            var editUrl = '@Url.Action("MasterLC", "BuyerOrder")';
+            window.location.href = editUrl;
+        }
+        
+        function gotoCreateExportInvoice() {
+            var editUrl = '@Url.Action("ExportInvoice", "BuyerOrder")';
+            window.location.href = editUrl;
+        }
+        function gotoCreateRealization() {
+            var editUrl = '@Url.Action("Realization", "BuyerOrder")';
+            window.location.href = editUrl;
+        }
+
+        function setInactiveUrl(data) {
+            var myUrlInactive = '@Url.Action("InactiveMasterLC", "BuyerOrder")';
+
+            var modal = document.getElementById("customModal");
+            modal.style.display = "block";
+
+            document.getElementById("confirmBtn").onclick = function () {
+                $.ajax({
+                    type: "get",
+                    data: { Id: data },
+                    url: myUrlInactive,
+                    success: function (response) {
+                        if (response.success == "1") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-green",
+                            });
+                            initTabulator();
+                        }
+                        else if (response.success == "0") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-red",
+                            });
+                        }
+                    }
+                });
+                modal.style.display = "none";
+            };
+
+            document.getElementById("cancelBtn").onclick = function () {
+                modal.style.display = "none";
+            };
+        }
+
+        function customCheckBoxFormatter(cell, formatterParams, onRendered) {
+            return '<input type="checkbox" class="custom-checkbox mt-2">';
+        }
+
+        var column = [
+            { title: "", field: "CheckBox", headerHozAlign: "left", headerSort: false, formatter: customCheckBoxFormatter, visible: true, width: 50 },
+            {
+                title: "Company", field: "Company", hozAlign: "left", vertAlign: "middle"
+            },
+            {
+                title: "BuyerGroup", field: "BuyerGroup", hozAlign: "left", vertAlign: "middle"
+            },
+            {
+                title: "Buyer", field: "Buyer", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Concern Bank", field: "ConcernBank", hozAlign: "center", vertAlign: "middle",
+            },
+            {
+                title: "Buyer Bank", field: "BuyerBank", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Actions", field: "button", headerHozAlign: "center", vertAlign: "middle", headerSort: false, hozAlign: "right", resizable: false, formatter: function (cell, formatterParams, onRendered) {
+                    var data = cell.getData();
+                    console.log("see data::", data);
+                    var myUrlGetforInvoice = `@Url.Action("MasterLC", "BuyerOrder")?id=${data.Id}`;
+
+                    var inActive = `setInactiveUrl(${data.Id}) `
+
+
+                    var editHtml;
+
+                    editHtml = `
+                                        <a href='${myUrlGetforInvoice}' class='text-decoration-none text-black ms-3 mt-1'>
+                                            <i class='bi bi-pencil-square pe-1'></i> <span>Edit</span>  <br />
+                                        </a>
+                                        <div class='dropdown-divider m-0'></div>`;
+
+                    var reportHtml;
+
+                    reportHtml = `
+                                        <a href='${myUrlGetforInvoice}' class='text-decoration-none text-black ms-3 mt-1'>
+                                                    <i class='bi bi-pencil-square pe-1'></i> <span>Report</span>  <br />
+                                        </a>
+                                        <div class='dropdown-divider m-0'></div>`;
+
+
+
+                    var deleteHtml;
+                    deleteHtml = `
+                                             <a onclick='${inActive}' class='text-decoration-none text-black ms-3 mt-1' href='#' id='InActive'>
+                                                 <i class="bi bi-trash3"></i><span class='ms-1 mt-2'>Delete</span><br />
+                                             </a>
+                                         `;
+
+                    var statusDependentHtml = data.isPosted ? deleteHtml : editHtml + reportHtml + deleteHtml;
+                    var html = `
+                                                                              <div class='dropdown ms-1'>
+
+                                                                                                                      <a href='${myUrlGetforInvoice}' class='text-decoration-none  ms-3 mt-1'>
+                                                                                           Edit
+                                                                                       </a>
+                                                                                  <button class='btn dropdown-toggle' type='button' id='dropdownMenuButton1' data-bs-toggle='dropdown' aria-expanded='false'></button>
+                                                                                 <ul class='dropdown-menu item-menu' aria-labelledby='dropdownMenuButton1'>
+                                                                                      ${statusDependentHtml}
+
+                                                                                  </ul>
+                                                                              </div>
+                                                                          `;
+
+                    return html;
+                },
+                visible: true, cellClick: function (e, cell) {
+                    cell.getElement().classList.add('active-cell');
+                },
+            },
+
+        ]
+        function initTabulator() {
+            function fetchDataFromServer() {
+                var MyAppUrlSettings = {
+                    MyUsefulUrl: '@Url.Action("GetMasterLCList", "BuyerOrder")'
+                };
+                return $.ajax({
+                    url: MyAppUrlSettings.MyUsefulUrl,
+
+                    dataType: "json",
+                });
+            }
+
+            fetchDataFromServer().done(function (response) {
+
+                console.log("notrmal response:", response.data);
+                var dataTable = response.data;
+
+
+                salesApiUrl = '@Url.Action("GetMasterLCList", "BuyerOrder")',
+                    salesTable = new Tabulator("#example-table", {
+
+                        layout: "fitColumns",
+                        minHeight: 400,
+                        pagination: true,
+                        movableColumns: true,
+                        data: dataTable,
+                        columns: column,
+
+                    });
+                document.getElementById("masterLCPrint-pdf").addEventListener("click", function () {
+                    salesTable.print(false, true);
+                });
+                document.getElementById("masterLCPrint-excel").addEventListener("click", function () {
+                    salesTable.download("xlsx", "data.xlsx", { sheetName: "Table Data" });
+                });
+            });
+        }
+    </script>
+
+    <script>
+        if ('@ListType' === "ExportInvoice") {
+            $("#MasterLC").removeClass("active");
+            $("#ExportInvoice").addClass("active");
+            $("#Realization").removeClass("active");
+
+            $("#masterLC_view_id").addClass("d-none");
+            $("#exportInvoice_view_id").removeClass("d-none");
+            $("#Realization_view_id").addClass("d-none");
+
+            initTabulatorforExportInvoice();
+        }
+
+        $("#ExportInvoice").on("click", function () {
+            $("#MasterLC").removeClass("active");
+            $("#ExportInvoice").addClass("active");
+            $("#Realization").removeClass("active");
+
+            $("#masterLC_view_id").addClass("d-none");
+            $("#exportInvoice_view_id").removeClass("d-none");
+            $("#Realization_view_id").addClass("d-none");
+
+            initTabulatorforExportInvoice();
+        })
+
+        function setInactiveExportInvoice(data) {
+            var myUrlInactive = '@Url.Action("InactiveExportInvoice", "BuyerOrder")';
+
+            var modal = document.getElementById("customModal");
+            modal.style.display = "block";
+
+            document.getElementById("confirmBtn").onclick = function () {
+                $.ajax({
+                    type: "get",
+                    data: { Id: data },
+                    url: myUrlInactive,
+                    success: function (response) {
+                        if (response.success == "1") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-green",
+                            });
+                            initTabulator();
+                        }
+                        else if (response.success == "0") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-red",
+                            });
+                        }
+                    }
+                });
+                modal.style.display = "none";
+            };
+
+            document.getElementById("cancelBtn").onclick = function () {
+                modal.style.display = "none";
+            };
+        }
+
+        var exportcolumn = [
+            { title: "", field: "CheckBox", headerHozAlign: "left", headerSort: false, formatter: customCheckBoxFormatter, visible: true, width: 50 },
+            { title: "Id", field: "Id", hozAlign: "left", vertAlign: "middle", visible: false },
+            { title: "Invoice No", field: "InvoiceNo", hozAlign: "left", vertAlign: "middle" },
+            { title: "Destination", field: "Destination", hozAlign: "center", vertAlign: "middle" },
+            { title: "Invoice Date", field: "InvoiceDate", hozAlign: "center", vertAlign: "middle" },
+            { title: "ExpNo", field: "ExpNo", hozAlign: "center", vertAlign: "middle" },
+            { title: "Exp Date", field: "ExpDate", hozAlign: "center", vertAlign: "middle" },
+            { title: "BLNo", field: "BLNo", hozAlign: "center", vertAlign: "middle" },
+            { title: "BLDate", field: "BLDate", hozAlign: "center", vertAlign: "middle" },
+            { title: "Total Value", field: "TotalValue", hozAlign: "center", vertAlign: "middle" },
+            { title: "Notify Party", field: "NotifyParty", hozAlign: "center", vertAlign: "middle" },
+            { title: "TotalCartonQty", field: "TotalCartonQty", hozAlign: "center", vertAlign: "middle" },
+            { title: "NetWeight", field: "NetWeight", hozAlign: "center", vertAlign: "middle" },
+            { title: "GrossWeight", field: "GrossWeight", hozAlign: "center", vertAlign: "middle" },
+            {
+                title: "Actions", field: "button", headerHozAlign: "center", vertAlign: "middle", headerSort: false, hozAlign: "right", resizable: false, formatter: function (cell, formatterParams, onRendered) {
+                    var data = cell.getData();
+                    console.log("see data::", data);
+                    var myUrlGetforInvoice = `@Url.Action("ExportInvoice", "BuyerOrder")?id=${data.Id}`;
+
+                    var inActive = `setInactiveExportInvoice(${data.Id}) `
+
+
+                    var editHtml;
+
+                    editHtml = `
+                                        <a href='${myUrlGetforInvoice}' class='text-decoration-none text-black ms-3 mt-1'>
+                                            <i class='bi bi-pencil-square pe-1'></i> <span>Edit</span>  <br />
+                                        </a>
+                                        <div class='dropdown-divider m-0'></div>`;
+
+                    var reportHtml;
+
+                    reportHtml = `
+                                        <a href='${myUrlGetforInvoice}' class='text-decoration-none text-black ms-3 mt-1'>
+                                                    <i class='bi bi-pencil-square pe-1'></i> <span>Report</span>  <br />
+                                        </a>
+                                        <div class='dropdown-divider m-0'></div>`;
+
+
+
+                    var deleteHtml;
+                    deleteHtml = `
+                                             <a onclick='${inActive}' class='text-decoration-none text-black ms-3 mt-1' href='#' id='InActive'>
+                                                 <i class="bi bi-trash3"></i><span class='ms-1 mt-2'>Delete</span><br />
+                                             </a>
+                                         `;
+
+                    var statusDependentHtml = data.isPosted ? deleteHtml : editHtml + reportHtml + deleteHtml;
+                    var html = `
+                                                                              <div class='dropdown ms-1'>
+
+                                                                                                                      <a href='${myUrlGetforInvoice}' class='text-decoration-none  ms-3 mt-1'>
+                                                                                           Edit
+                                                                                       </a>
+                                                                                  <button class='btn dropdown-toggle' type='button' id='dropdownMenuButton1' data-bs-toggle='dropdown' aria-expanded='false'></button>
+                                                                                 <ul class='dropdown-menu item-menu' aria-labelledby='dropdownMenuButton1'>
+                                                                                      ${statusDependentHtml}
+
+                                                                                  </ul>
+                                                                              </div>
+                                                                          `;
+
+                    return html;
+                },
+                visible: true, cellClick: function (e, cell) {
+                    cell.getElement().classList.add('active-cell');
+                },
+            },
+
+        ]
+
+        function formatDateToCustomStringForDate(inputDate) {
+            const months = [
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            ];
+
+            if (inputDate instanceof Date && !isNaN(inputDate)) {
+                const day = inputDate.getDate();
+                const monthIndex = inputDate.getMonth();
+                const year = inputDate.getFullYear();
+                const formattedDay = day < 10 ? `0${day}` : day;
+
+                const formattedDate = `${formattedDay}-${months[monthIndex]}-${year}`;
+                return formattedDate;
+            } else {
+                return inputDate;
+            }
+        }
+
+        function initTabulatorforExportInvoice() {
+
+            setTimeout(function () {
+                var previousInvoiceTable = new Tabulator("#exportInvoice-table", {
+                layout: "fitColumns",
+                height: "fitDataFill",
+                selectable: 1,
+                pagination: true,
+                scrollHorizontal: true,
+                paginationMode: "remote",
+                paginationSize: 5,
+                paginationInitialPage: 1,
+                paginationSizeSelector: [5, 10, 25, 50, 100, true],
+                paginationCounter: "rows",
+                columnDefaults: {
+                    resizable: true,
+                },
+                ajaxURL: '@Url.Action("GetExpInvoiceList", "BuyerOrder")' ,
+                ajaxConfig: "get",
+                ajaxContentType: "json",
+                ajaxResponse: function (url, params, response) {
+                    previousInvoiceTable.setMaxPage(response.last_page);
+                    console.log("response.last_page", response.last_page);
+
+                    dataLoad = response.data || [];
+                    totalValue = response.total;
+
+                    dataLoad.forEach(function (item) {
+                        if (item.InvoiceDate) {
+                            const dateObject = new Date(item.InvoiceDate);
+                            item.InvoiceDate = formatDateToCustomStringForDate(dateObject);
+                        }
+                        if (item.ExpDate) {
+                            const dateObject = new Date(item.ExpDate);
+                            item.ExpDate = formatDateToCustomStringForDate(dateObject);
+                        }
+                        if (item.BLDate) {
+                            const dateObject = new Date(item.BLDate);
+                            item.BLDate = formatDateToCustomStringForDate(dateObject);
+                        }
+                    });
+                    return {
+                        data: response.data,
+                        last_page: response.last_page,
+                        total: response.total
+                    };
+                },
+                columns: exportcolumn,
+                height: "311px",
+            });
+            }, 100);
+
+            
+
+            document.getElementById("exportInvoicePrint-pdf").addEventListener("click", function () {
+                    previousInvoiceTable.print(false, true);
+            });
+
+            document.getElementById("exportInvoicePrint-excel").addEventListener("click", function () {
+                    previousInvoiceTable.download("xlsx", "data.xlsx", { sheetName: "Table Data" });
+            });
+        }
+    </Script>
+
+    <script>
+        if ('@ListType' === "Realization") {
+            $("#MasterLC").removeClass("active");
+            $("#ExportInvoice").removeClass("active");
+            $("#Realization").addClass("active");
+
+            $("#masterLC_view_id").addClass("d-none");
+            $("#exportInvoice_view_id").addClass("d-none");
+            $("#Realization_view_id").removeClass("d-none");
+
+            initTabulatorforRealization();
+        }
+
+        $("#Realization").on("click", function () {
+            $("#MasterLC").removeClass("active");
+            $("#ExportInvoice").removeClass("active");
+            $("#Realization").addClass("active");
+
+            $("#masterLC_view_id").addClass("d-none");
+            $("#exportInvoice_view_id").addClass("d-none");
+            $("#Realization_view_id").removeClass("d-none");
+
+            initTabulatorforRealization();
+        })
+
+        function setInactiveRealization(data) {
+            var myUrlInactive = '@Url.Action("InactiveRealization", "BuyerOrder")';
+
+            var modal = document.getElementById("customModal");
+            modal.style.display = "block";
+
+            document.getElementById("confirmBtn").onclick = function () {
+                $.ajax({
+                    type: "get",
+                    data: { Id: data },
+                    url: myUrlInactive,
+                    success: function (response) {
+                        if (response.success == "1") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-green",
+                            });
+                            initTabulator();
+                        }
+                        else if (response.success == "0") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-red",
+                            });
+                        }
+                    }
+                });
+                modal.style.display = "none";
+            };
+
+            document.getElementById("cancelBtn").onclick = function () {
+                modal.style.display = "none";
+            };
+        }
+
+        var realizationcolumn = [
+            { title: "", field: "CheckBox", headerHozAlign: "left", headerSort: false, formatter: customCheckBoxFormatter, visible: true, width: 50 },
+            { title: "Id", field: "Id", hozAlign: "left", vertAlign: "middle", visible: false },
+            { title: "File Number", field: "FileNumber", hozAlign: "left", vertAlign: "middle" },
+            { title: "FBP Number", field: "FBPNo", hozAlign: "center", vertAlign: "middle" },
+            { title: "FBPDate", field: "FBPDate", hozAlign: "center", vertAlign: "middle" },
+            { title: "Bank Reference", field: "BankRef", hozAlign: "center", vertAlign: "middle" },
+            { title: "Courier No", field: "CourierNo", hozAlign: "center", vertAlign: "middle" },
+            { title: "Total Value", field: "TotalValue", hozAlign: "center", vertAlign: "middle" },
+            { title: "Receiving Value", field: "ReceivingValue", hozAlign: "center", vertAlign: "middle" },
+            { title: "Bank Charge", field: "BankCharge", hozAlign: "center", vertAlign: "middle" },
+            { title: "Remarks", field: "Remarks", hozAlign: "center", vertAlign: "middle" },
+            {
+                title: "Actions", field: "button", headerHozAlign: "center", vertAlign: "middle", headerSort: false, hozAlign: "right", resizable: false, formatter: function (cell, formatterParams, onRendered) {
+                    var data = cell.getData();
+                    console.log("see data::", data);
+                    var myUrlGetforInvoice = `@Url.Action("Realization", "BuyerOrder")?id=${data.Id}`;
+
+                    var inActive = `setInactiveRealization(${data.Id}) `
+
+
+                    var editHtml;
+
+                    editHtml = `
+                                        <a href='${myUrlGetforInvoice}' class='text-decoration-none text-black ms-3 mt-1'>
+                                            <i class='bi bi-pencil-square pe-1'></i> <span>Edit</span>  <br />
+                                        </a>
+                                        <div class='dropdown-divider m-0'></div>`;
+
+                    var reportHtml;
+
+                    reportHtml = `
+                                        <a href='${myUrlGetforInvoice}' class='text-decoration-none text-black ms-3 mt-1'>
+                                                    <i class='bi bi-pencil-square pe-1'></i> <span>Report</span>  <br />
+                                        </a>
+                                        <div class='dropdown-divider m-0'></div>`;
+
+
+
+                    var deleteHtml;
+                    deleteHtml = `
+                                             <a onclick='${inActive}' class='text-decoration-none text-black ms-3 mt-1' href='#' id='InActive'>
+                                                 <i class="bi bi-trash3"></i><span class='ms-1 mt-2'>Delete</span><br />
+                                             </a>
+                                         `;
+
+                    var statusDependentHtml = data.isPosted ? deleteHtml : editHtml + reportHtml + deleteHtml;
+                    var html = `
+                                                                              <div class='dropdown ms-1'>
+
+                                                                                                                      <a href='${myUrlGetforInvoice}' class='text-decoration-none  ms-3 mt-1'>
+                                                                                           Edit
+                                                                                       </a>
+                                                                                  <button class='btn dropdown-toggle' type='button' id='dropdownMenuButton1' data-bs-toggle='dropdown' aria-expanded='false'></button>
+                                                                                 <ul class='dropdown-menu item-menu' aria-labelledby='dropdownMenuButton1'>
+                                                                                      ${statusDependentHtml}
+
+                                                                                  </ul>
+                                                                              </div>
+                                                                          `;
+
+                    return html;
+                },
+                visible: true, cellClick: function (e, cell) {
+                    cell.getElement().classList.add('active-cell');
+                },
+            },
+
+        ]
+
+        function formatDateToCustomStringForRealization(inputDate) {
+            const months = [
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            ];
+
+            if (inputDate instanceof Date && !isNaN(inputDate)) {
+                const day = inputDate.getDate();
+                const monthIndex = inputDate.getMonth();
+                const year = inputDate.getFullYear();
+                const formattedDay = day < 10 ? `0${day}` : day;
+
+                const formattedDate = `${formattedDay}-${months[monthIndex]}-${year}`;
+                return formattedDate;
+            } else {
+                return inputDate;
+            }
+        }
+
+        function initTabulatorforRealization() {
+
+            setTimeout(function () {
+                    var realizationTable = new Tabulator("#realization-table", {
+                    layout: "fitColumns",
+                    height: "fitDataFill",
+                    selectable: 1,
+                    pagination: true,
+                    scrollHorizontal: true,
+                    paginationMode: "remote",
+                    paginationSize: 5,
+                    paginationInitialPage: 1,
+                    paginationSizeSelector: [5, 10, 25, 50, 100, true],
+                    paginationCounter: "rows",
+                    columnDefaults: {
+                        resizable: true,
+                    },
+                    ajaxURL: '@Url.Action("GetRealizationList", "BuyerOrder")' ,
+                    ajaxConfig: "get",
+                    ajaxContentType: "json",
+                    ajaxResponse: function (url, params, response) {
+                        realizationTable.setMaxPage(response.last_page);
+                        console.log("response.last_page", response.last_page);
+                        
+                        dataLoad = response.data || [];
+                        totalValue = response.total;
+
+                        dataLoad.forEach(function (item) {
+                            if (item.FBPDate) {
+                                const dateObject = new Date(item.FBPDate);
+                                item.FBPDate = formatDateToCustomStringForRealization(dateObject);
+                            }
+                            
+                        });
+                    
+                        return {
+                            data: response.data,
+                            last_page: response.last_page,
+                            total: response.total
+                        };
+                    },
+                    columns: realizationcolumn,
+                    height: "311px",
+                });
+                document.getElementById("realizationPrint-pdf").addEventListener("click", function () {
+                        realizationTable.print(false, true);
+                });
+
+                document.getElementById("realizationPrint-excel").addEventListener("click", function () {
+                        realizationTable.download("xlsx", "data.xlsx", { sheetName: "Table Data" });
+                });
+            }, 100);
+
+            
+
+            
+        }
+    </Script>
+}

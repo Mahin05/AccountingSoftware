@@ -1,0 +1,689 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = "Order Allocation List";
+    Layout = "~/Views/Shared/_adminLayout.cshtml";
+    var ListType = ViewBag.ListType as string;
+    
+}
+<link href="~/css/accountHeadListGearDropdown.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<style>
+    .tabulator {
+        border: none;
+    }
+
+    .tabulator-col .tabulator-col-title {
+        text-align: center;
+    }
+
+    .tabulator-tableholder {
+        background-color: white;
+    }
+
+    .tabulator[tabulator-layout=fitDataTable] {
+        display: inherit;
+    }
+
+    .tabulator .tabulator-header .tabulator-col, .tabulator .tabulator-header {
+        background-color: white;
+        border-right: 1px solid #dee2e6;
+    }
+  
+    .tabulator-row .tabulator-cell.tabulator-frozen.tabulator-frozen-left {
+        border-right: 2px solid #aaaaaa38;
+    }
+
+    .tabulator-row .tabulator-cell {
+        border-right: 1px solid #aaaaaa38;
+        border-left: 1px solid #aaaaaa38;
+    }
+
+    .tabulator-cell {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .tabulator .tabulator-row .active-cell {
+        overflow: visible;
+    }
+
+    .tabulator-row:nth-child(even) {
+        background-color: white;
+    }
+
+    .tabulator-row {
+        border: none;
+    }
+
+    #modal-content2 {
+        background-color: #fefefe;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 30%;
+    }
+</style>
+
+
+<div class="col-lg-4">
+    <p class="fs-4 fw-bold">Buyer PO List</p>
+</div>
+<ul class="nav nav-tabs mt-5">
+    <li class="nav-item">
+        <a class="nav-link active fw-semibold" aria-current="page" href="#" id="all_order">Buyer PO</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link fw-semibold" href="#" id="bom">BOM</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link fw-semibold" href="#" id="daily_production">Daily Production</a>
+    </li>
+
+    
+</ul>
+
+<div id="order_view_id" class="d-none">
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-success fw-bold ms-3 h-70 radius-30 my-2" type="button" data-bs-toggle="dropdown" onclick="gotoCreatePO()">
+            New Buyer PO
+        </button>
+    </div>
+    
+    <div class="d-flex justify-content-end">
+        <button title="Print" class="btn btn-white border-0" type="button" id="salesPrint-pdf" style="padding: 0px;padding-bottom: 10px;"
+                aria-expanded="false">
+            <i class="bi bi-printer fs-5" style=" margin-right: 0px; "></i>
+        </button>
+        <button title="Export to excel" class="btn btn-white border-0" type="button" id="salesPrint-excel" style="padding: 0px;padding-bottom: 10px;"
+                aria-expanded="false">
+            <i class="bi bi-file-earmark-excel fs-5" style=" margin-right: 0px; "></i>
+        </button>
+    </div>
+    <div id="example-table"></div>
+</div>
+
+<div id="bom_view_id" class="d-none">
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-success fw-bold ms-3 h-70 radius-30 my-2" type="button" data-bs-toggle="dropdown" onclick="gotoCreateBOM()">
+            New BOM
+        </button>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <button title="Print" class="btn btn-white border-0" type="button" id="bomPrint-pdf" style="padding: 0px;padding-bottom: 10px;"
+                aria-expanded="false">
+            <i class="bi bi-printer fs-5" style=" margin-right: 0px; "></i>
+        </button>
+        <button title="Export to excel" class="btn btn-white border-0" type="button" id="bomPrint-excel" style="padding: 0px;padding-bottom: 10px;"
+                aria-expanded="false">
+            <i class="bi bi-file-earmark-excel fs-5" style=" margin-right: 0px; "></i>
+        </button>
+    </div>
+    <div id="bom-table"></div>
+</div>
+
+<div id="daily_production_view_id" class="d-none">
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-success fw-bold ms-3 h-70 radius-30 my-2" type="button" data-bs-toggle="dropdown" onclick="gotoCreateDailyProduction()">
+            New Daily Production
+        </button>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <button title="Print" class="btn btn-white border-0" type="button" id="dailyProPrint-pdf" style="padding: 0px;padding-bottom: 10px;"
+                aria-expanded="false">
+            <i class="bi bi-printer fs-5" style=" margin-right: 0px; "></i>
+        </button>
+        <button title="Export to excel" class="btn btn-white border-0" type="button" id="dailyProPrint-excel" style="padding: 0px;padding-bottom: 10px;"
+                aria-expanded="false">
+            <i class="bi bi-file-earmark-excel fs-5" style=" margin-right: 0px; "></i>
+        </button>
+    </div>
+    <div id="daily-production-table"></div>
+</div>
+
+<div class="col-md-2  col-2">
+    <div id="customModal" class="modal">
+        <div class="modal-content" id="modal-content2">
+            <p>Are you sure you want to delete?</p>
+            <div class="row">
+                <div class="col-md-6 col-6">
+                    <button id="confirmBtn" class="btn btn-success" style="width: 100px">OK</button>
+                </div>
+                <div class="col-md-6 col-6 d-flex justify-content-end">
+                    <button id="cancelBtn" class="btn btn-danger" style="width: 100px">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="~/admin_theme_gtr/assets/js/dateRangeMultipleFunctionForAccountsVoucherReport.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+
+    <script>
+
+        function setInactiveUrl(data) {
+            var myUrlInactive = '@Url.Action("InactiveOrder", "BuyerOrder")';
+
+            var modal = document.getElementById("customModal");
+            modal.style.display = "block";
+
+            document.getElementById("confirmBtn").onclick = function () {
+                $.ajax({
+                    type: "get",
+                    data: { Id: data },
+                    url: myUrlInactive,
+                    success: function (response) {
+                        if (response.success == "1") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-green",
+                            });
+                            initTabulator();
+                        }
+                        else if (response.success == "0") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-red",
+                            });
+                        }
+                    }
+                });
+                modal.style.display = "none";
+            };
+
+            document.getElementById("cancelBtn").onclick = function () {
+                modal.style.display = "none";
+            };
+        }
+
+        function customCheckBoxFormatter(cell, formatterParams, onRendered) {
+            return '<input type="checkbox" class="custom-checkbox mt-2">';
+        }
+
+        var column = [
+            { title: "", field: "CheckBox", headerHozAlign: "left", headerSort: false, formatter: customCheckBoxFormatter, visible: true, width: 50 },
+            {
+                title: "BuyerPO", field: "BuyerPO", hozAlign: "left", vertAlign: "middle"
+            },
+            {
+                title: "Buyers", field: "BuyerName", hozAlign: "left", vertAlign: "middle"
+            },
+            {
+                title: "Style", field: "StyleName", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Unit Price", field: "UnitPrice", hozAlign: "right", vertAlign: "middle",
+                formatter: function (cell, formatterParams, onRendered) {
+                    var formattedNumber = cell.getValue().toLocaleString();
+
+                    return "<div style='text-align:right'>" + formattedNumber + "</div>";
+                },
+            },
+            {
+                title: "Quantity", field: "TotalQuantity", hozAlign: "right", vertAlign: "middle"
+            },
+            {
+                title: "Actions", field: "button", headerHozAlign: "center", vertAlign: "middle", headerSort: false, hozAlign: "right", resizable: false, formatter: function (cell, formatterParams, onRendered) {
+                    var data = cell.getData();
+                    console.log("see data::", data);
+                    var myUrlGetforInvoice = `@Url.Action("BuyerPO", "BuyerOrder")?id=${data.Id}`;
+
+                    var inActive = `setInactiveUrl(${data.Id}) `
+                    var active = `setActiveUrl(${data.Id}) `
+
+                    
+                    var editHtml;
+
+                    editHtml = `
+                                <a href='${myUrlGetforInvoice}' class='text-decoration-none text-black ms-3 mt-1'>
+                                    <i class='bi bi-pencil-square pe-1'></i> <span>Edit</span>  <br />
+                                </a>
+                                <div class='dropdown-divider m-0'></div>`;
+
+                   
+
+                    var deleteHtml;
+                    deleteHtml = `
+                                     <a onclick='${inActive}' class='text-decoration-none text-black ms-3 mt-1' href='#' id='InActive'>
+                                         <i class="bi bi-trash3"></i><span class='ms-1 mt-2'>Delete</span><br />
+                                     </a>
+                                 `;
+
+                    var statusDependentHtml = data.isPosted ? deleteHtml : editHtml + deleteHtml;
+                    var html = `
+                                                                      <div class='dropdown ms-1'>
+
+                                                                                                              <a href='${myUrlGetforInvoice}' class='text-decoration-none  ms-3 mt-1'>
+                                                                                   Edit
+                                                                               </a>
+                                                                          <button class='btn dropdown-toggle' type='button' id='dropdownMenuButton1' data-bs-toggle='dropdown' aria-expanded='false'></button>
+                                                                         <ul class='dropdown-menu item-menu' aria-labelledby='dropdownMenuButton1'>
+                                                                              ${statusDependentHtml}
+
+                                                                          </ul>
+                                                                      </div>
+                                                                  `;
+
+                    return html;
+                },
+                visible: true, cellClick: function (e, cell) {
+                    cell.getElement().classList.add('active-cell');
+                },
+            },
+
+        ]
+
+        function initTabulator()
+        {
+            function fetchDataFromServer() {
+                var MyAppUrlSettings = {
+                    MyUsefulUrl: '@Url.Action("GetOrderList", "BuyerOrder")'
+                };
+                return $.ajax({
+                    url: MyAppUrlSettings.MyUsefulUrl,
+                   
+                    dataType: "json",
+                });
+            }
+
+            fetchDataFromServer().done(function (response) {
+
+                console.log("notrmal response:", response.data);
+                var dataTable = response.data;
+               
+
+                salesApiUrl = '@Url.Action("GetOrderList", "BuyerOrder")',
+                    salesTable = new Tabulator("#example-table", {
+
+                        layout: "fitColumns",
+                        minHeight: 400,
+                        pagination: true,
+                        movableColumns: true,
+                        data: dataTable,
+                        columns: column,
+
+                    });
+                document.getElementById("salesPrint-pdf").addEventListener("click", function () {
+                    salesTable.print(false, true);
+                });
+                document.getElementById("salesPrint-excel").addEventListener("click", function () {
+                    salesTable.download("xlsx", "data.xlsx", { sheetName: "Table Data" });
+                });
+            });
+        }
+
+        if ('@ListType' === "Order") {
+            $("#all_order").addClass("active");
+            $("#bom").removeClass("active");
+            $("#daily_production").removeClass("active");
+
+            $("#order_view_id").removeClass("d-none");
+            $("#bom_view_id").addClass("d-none");
+            $("#daily_production_view_id").addClass("d-none");
+
+            initTabulator();
+        }
+
+        $("#all_order").on("click", function () {
+            $("#all_order").addClass("active");
+            $("#bom").removeClass("active");
+            $("#daily_production").removeClass("active");
+
+            $("#order_view_id").removeClass("d-none");
+            $("#bom_view_id").addClass("d-none");
+            $("#daily_production_view_id").addClass("d-none");
+
+            initTabulator();
+        })
+
+        function gotoCreatePO() {
+            var editUrl = '@Url.Action("BuyerPO", "BuyerOrder")';
+            window.location.href = editUrl;
+        }
+    </script>
+
+    <script>
+
+        function gotoCreateBOM() {
+            var editUrl = '@Url.Action("BOM", "BuyerOrder")';
+            window.location.href = editUrl;
+        }
+        function gotoCreateDailyProduction() {
+            var editUrl = '@Url.Action("DailyProduction", "BuyerOrder")';
+            window.location.href = editUrl;
+        }
+
+        function setInactiveUrlBOM(data) {
+            var myUrlInactive = '@Url.Action("InactiveBOM", "BuyerOrder")';
+
+            var modal = document.getElementById("customModal");
+            modal.style.display = "block";
+
+            document.getElementById("confirmBtn").onclick = function () {
+                $.ajax({
+                    type: "get",
+                    data: { Id: data },
+                    url: myUrlInactive,
+                    success: function (response) {
+                        if (response.success == "1") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-green",
+                            });
+                            initTabulatorBOM();
+                        }
+                        else if (response.success == "0") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-red",
+                            });
+                        }
+                    }
+                });
+                modal.style.display = "none";
+            };
+
+            document.getElementById("cancelBtn").onclick = function () {
+                modal.style.display = "none";
+            };
+        }
+
+        var bomcolumn = [
+            { title: "", field: "CheckBox", headerHozAlign: "left", headerSort: false, formatter: customCheckBoxFormatter, visible: true, width: 50 },
+
+            {
+                title: "BOM", field: "BOMCode", hozAlign: "left", vertAlign: "middle"
+            },
+            {
+                title: "Style", field: "Style", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Color", field: "Color", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Size", field: "Size", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Actions", field: "button", headerHozAlign: "center", vertAlign: "middle", headerSort: false, hozAlign: "right", resizable: false, formatter: function (cell, formatterParams, onRendered) {
+                    var data = cell.getData();
+                    console.log("see data::", data);
+                    var myUrlGetforInvoice = `@Url.Action("BOM", "BuyerOrder")?id=${data.Id}`;
+
+                    var inActive = `setInactiveUrlBOM(${data.Id}) `
+                    var active = `setActiveUrl(${data.Id}) `
+
+
+                    var editHtml;
+
+                    editHtml = `
+                                        <a href='${myUrlGetforInvoice}' class='text-decoration-none text-black ms-3 mt-1'>
+                                            <i class='bi bi-pencil-square pe-1'></i> <span>Edit</span>  <br />
+                                        </a>
+                                        <div class='dropdown-divider m-0'></div>`;
+
+
+
+                    var deleteHtml;
+                    deleteHtml = `
+                                             <a onclick='${inActive}' class='text-decoration-none text-black ms-3 mt-1' href='#' id='InActive'>
+                                                 <i class="bi bi-trash3"></i><span class='ms-1 mt-2'>Delete</span><br />
+                                             </a>
+                                         `;
+
+                    var statusDependentHtml = data.isPosted ? deleteHtml : editHtml + deleteHtml;
+                    var html = `
+                                                                              <div class='dropdown ms-1'>
+
+                                                                                                                      <a href='${myUrlGetforInvoice}' class='text-decoration-none  ms-3 mt-1'>
+                                                                                           Edit
+                                                                                       </a>
+                                                                                  <button class='btn dropdown-toggle' type='button' id='dropdownMenuButton1' data-bs-toggle='dropdown' aria-expanded='false'></button>
+                                                                                 <ul class='dropdown-menu item-menu' aria-labelledby='dropdownMenuButton1'>
+                                                                                      ${statusDependentHtml}
+
+                                                                                  </ul>
+                                                                              </div>
+                                                                          `;
+
+                    return html;
+                },
+                visible: true, cellClick: function (e, cell) {
+                    cell.getElement().classList.add('active-cell');
+                },
+            },
+
+        ]
+
+        function initTabulatorBOM() {
+            function fetchDataFromServer() {
+                var MyAppUrlSettings = {
+                    MyUsefulUrl: '@Url.Action("GetBOMList", "BuyerOrder")'
+                };
+                return $.ajax({
+                    url: MyAppUrlSettings.MyUsefulUrl,
+
+                    dataType: "json",
+                });
+            }
+
+            fetchDataFromServer().done(function (response) {
+
+                console.log("notrmal response:", response.data);
+                var dataTable = response.data;
+
+
+                salesApiUrl = '@Url.Action("GetBOMList", "BuyerOrder")',
+                    salesTable = new Tabulator("#bom-table", {
+
+                        layout: "fitColumns",
+                        minHeight: 400,
+                        pagination: true,
+                        movableColumns: true,
+                        data: dataTable,
+                        columns: bomcolumn,
+
+                    });
+                document.getElementById("bomPrint-pdf").addEventListener("click", function () {
+                    salesTable.print(false, true);
+                });
+                document.getElementById("bomPrint-excel").addEventListener("click", function () {
+                    salesTable.download("xlsx", "data.xlsx", { sheetName: "Table Data" });
+                });
+            });
+        }
+
+        if ('@ListType' === "BOM") {
+            $("#all_order").removeClass("active");
+            $("#bom").addClass("active"); 
+            $("#daily_production").removeClass("active");
+
+            $("#order_view_id").addClass("d-none");
+            $("#bom_view_id").removeClass("d-none");
+            $("#daily_production_view_id").addClass("d-none");
+
+            initTabulatorBOM();
+        }
+
+        $("#bom").on("click", function () {
+            $("#all_order").removeClass("active");
+            $("#bom").addClass("active"); 
+            $("#daily_production").removeClass("active");
+
+            $("#order_view_id").addClass("d-none");
+            $("#bom_view_id").removeClass("d-none");
+            $("#daily_production_view_id").addClass("d-none");
+            initTabulatorBOM();
+        })
+    </script>
+
+    <script>
+
+        function gotoCreateBOM() {
+            var editUrl = '@Url.Action("BOM", "BuyerOrder")';
+            window.location.href = editUrl;
+        }
+
+        function setInactiveUrlDailyProduction(data) {
+            var myUrlInactive = '@Url.Action("InactiveDailyProduction", "BuyerOrder")';
+
+            var modal = document.getElementById("customModal");
+            modal.style.display = "block";
+
+            document.getElementById("confirmBtn").onclick = function () {
+                $.ajax({
+                    type: "get",
+                    data: { Id: data },
+                    url: myUrlInactive,
+                    success: function (response) {
+                        if (response.success == "1") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-green",
+                            });
+                            initTabulatorDailyProduction();
+                        }
+                        else if (response.success == "0") {
+                            toastr.success(response.msg, "", {
+                                "toastClass": "toast-red",
+                            });
+                        }
+                    }
+                });
+                modal.style.display = "none";
+            };
+
+            document.getElementById("cancelBtn").onclick = function () {
+                modal.style.display = "none";
+            };
+        }
+
+        var dailyProductioncolumn = [
+            { title: "", field: "CheckBox", headerHozAlign: "left", headerSort: false, formatter: customCheckBoxFormatter, visible: true, width: 50 },
+
+            {
+                title: "Style", field: "Style", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Buyer", field: "Buyer", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Buyer PO", field: "BuyerPO", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Total Quantity", field: "TotalQuantity", hozAlign: "center", vertAlign: "middle"
+            },
+            {
+                title: "Actions", field: "button", headerHozAlign: "center", vertAlign: "middle", headerSort: false, hozAlign: "right", resizable: false, formatter: function (cell, formatterParams, onRendered) {
+                    var data = cell.getData();
+                    console.log("see data::", data);
+                    var myUrlGetforInvoice = `@Url.Action("DailyProduction", "BuyerOrder")?id=${data.Id}`;
+
+                    var inActive = `setInactiveUrlDailyProduction(${data.Id}) `
+                    var active = `setActiveUrl(${data.Id}) `
+
+
+                    var editHtml;
+
+                    editHtml = `
+                                                <a href='${myUrlGetforInvoice}' class='text-decoration-none text-black ms-3 mt-1'>
+                                                    <i class='bi bi-pencil-square pe-1'></i> <span>Edit</span>  <br />
+                                                </a>
+                                                <div class='dropdown-divider m-0'></div>`;
+
+
+
+                    var deleteHtml;
+                    deleteHtml = `
+                                                     <a onclick='${inActive}' class='text-decoration-none text-black ms-3 mt-1' href='#' id='InActive'>
+                                                         <i class="bi bi-trash3"></i><span class='ms-1 mt-2'>Delete</span><br />
+                                                     </a>
+                                                 `;
+
+                    var statusDependentHtml = data.isPosted ? deleteHtml : editHtml + deleteHtml;
+                    var html = `
+                                                                                      <div class='dropdown ms-1'>
+
+                                                                                                                              <a href='${myUrlGetforInvoice}' class='text-decoration-none  ms-3 mt-1'>
+                                                                                                   Edit
+                                                                                               </a>
+                                                                                          <button class='btn dropdown-toggle' type='button' id='dropdownMenuButton1' data-bs-toggle='dropdown' aria-expanded='false'></button>
+                                                                                         <ul class='dropdown-menu item-menu' aria-labelledby='dropdownMenuButton1'>
+                                                                                              ${statusDependentHtml}
+
+                                                                                          </ul>
+                                                                                      </div>
+                                                                                  `;
+
+                    return html;
+                },
+                visible: true, cellClick: function (e, cell) {
+                    cell.getElement().classList.add('active-cell');
+                },
+            },
+
+        ]
+
+        function initTabulatorDailyProduction() {
+            function fetchDataFromServer() {
+                var MyAppUrlSettings = {
+                    MyUsefulUrl: '@Url.Action("GetDailyProductionList", "BuyerOrder")'
+                };
+                return $.ajax({
+                    url: MyAppUrlSettings.MyUsefulUrl,
+
+                    dataType: "json",
+                });
+            }
+
+            fetchDataFromServer().done(function (response) {
+
+                console.log("notrmal response:", response.data);
+                var dataTable = response.data;
+
+
+                salesApiUrl = '@Url.Action("GetDailyProductionList", "BuyerOrder")',
+                    productionTable = new Tabulator("#daily-production-table", {
+
+                        layout: "fitColumns",
+                        minHeight: 400,
+                        pagination: true,
+                        movableColumns: true,
+                        data: dataTable,
+                        columns: dailyProductioncolumn,
+
+                    });
+                document.getElementById("dailyProPrint-pdf").addEventListener("click", function () {
+                    productionTable.print(false, true);
+                });
+                document.getElementById("dailyProPrint-excel").addEventListener("click", function () {
+                    productionTable.download("xlsx", "data.xlsx", { sheetName: "Table Data" });
+                });
+            });
+        }
+
+        if ('@ListType' === "Daily Production") {
+            $("#all_order").removeClass("active");
+            $("#bom").removeClass("active");
+            $("#daily_production").addClass("active");
+
+            $("#order_view_id").addClass("d-none");
+            $("#bom_view_id").addClass("d-none");
+            $("#daily_production_view_id").removeClass("d-none");
+
+            initTabulatorDailyProduction();
+        }
+
+        $("#daily_production").on("click", function () {
+            $("#all_order").removeClass("active");
+            $("#bom").removeClass("active");
+            $("#daily_production").addClass("active");
+
+            $("#order_view_id").addClass("d-none");
+            $("#bom_view_id").addClass("d-none");
+            $("#daily_production_view_id").removeClass("d-none");
+            initTabulatorDailyProduction();
+        })
+    </script>
+}

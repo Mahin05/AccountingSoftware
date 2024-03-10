@@ -1,0 +1,27 @@
+﻿@{
+    Layout = null;
+    string Isactive(string value)
+    {
+        return Context.Request.Path.Value.ToLower().Contains(value.ToLower()) ? "active" : "";
+    }
+  ;
+}
+<style>
+    .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+        border-top-color: transparent !important;
+        border-left-color: transparent !important;
+        border-right-color: transparent !important;
+        border-bottom: 4px solid green;
+    }
+ </style>
+<ul class="nav nav-tabs mt-5">
+    <li class="nav-item">
+        <a class="nav-link @Isactive("Getthingsdone") fw-semibold " asp-action="getthingsDone" asp-controller="accounts" id="GetthingsDone-id">Get things done</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link fw-semibold @Isactive("Business")" asp-action="Business" asp-controller="accounts" id="BusinessOverview-id">Business overview</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link fw-semibold @Isactive("cashflow")" asp-action="cashflow" asp-controller="accounts" id="CashFlow-id">Cash flow</a>
+    </li>
+</ul>
